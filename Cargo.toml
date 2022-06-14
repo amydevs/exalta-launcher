@@ -1,0 +1,18 @@
+[package]
+name = "exalta"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.11.0", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+quick-xml = { version = "0.23", features = [ "serialize" ] }
+base64 = "0.13"
+
+directories = "4.0"
+clap = { version = "3.2.3", features = ["derive"] }

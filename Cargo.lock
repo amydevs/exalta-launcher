@@ -147,8 +147,6 @@ dependencies = [
  "clap",
  "directories",
  "exalta_core",
- "quick-xml",
- "reqwest",
  "serde",
  "serde_json",
  "tokio",

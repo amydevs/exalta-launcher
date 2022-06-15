@@ -1,4 +1,4 @@
-use auth::account::Account;
+use auth::{account::Account, AuthController};
 use reqwest::{Client, Url, header::{HeaderMap, HeaderValue}};
 
 pub mod config;
@@ -12,8 +12,11 @@ const DEFAULT_PARAMS: [(&str, &str); 3] = [
     ("game_net_user_id", ""),
 ];
 
+pub trait ExaltaClientTrait {
+    fn new() -> Result<Self, Box<dyn std::error::Error>> where Self: Sized;
+}
+
 pub struct ExaltaClient {
-    pub account: Option<Account>,
     pub client: Client,
     pub base_url: Url
 }
@@ -34,13 +37,12 @@ impl ExaltaClient {
             .build()?;
         
         Ok(Self {
-            account: None,
             client,
             base_url
         })
     }
 
-    pub async fn login(mut self, username: &str, password: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn login(mut self, username: &str, password: &str) -> Result<AuthController, Box<dyn std::error::Error>> {
         let tokenparams = vec![
             ("clientToken", CLIENT_TOKEN)
         ];
@@ -58,12 +60,12 @@ impl ExaltaClient {
             .form(&userpassparams)
             .send()
             .await?;
-        self.account = Some(quick_xml::de::from_str(resp.text().await?.as_str())?);
+        let account = quick_xml::de::from_str::<Account>(resp.text().await?.as_str())?;
         
-        Ok(self)
-    }
-    
-    pub async fn verify(self) {
-        
+        Ok(AuthController{
+            account,
+            base_url: self.base_url,
+            client: self.client
+        })
     }
 }

@@ -1,20 +1,11 @@
-use std::collections::HashMap;
-
-use account::Account;
 use clap::Parser;
 use directories::UserDirs;
 use exalta_core::ExaltaClient;
 use launchargs::LaunchArgs;
-use reqwest::{Url, header::{HeaderMap, HeaderValue}};
 use tokio::process::Command;
 
 mod args;
-mod account;
 mod launchargs;
-
-const BASE_URL: &str = "https://www.realmofthemadgod.com/";
-
-const CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

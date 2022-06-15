@@ -146,10 +146,21 @@ dependencies = [
  "base64",
  "clap",
  "directories",
+ "exalta_core",
  "quick-xml",
  "reqwest",
  "serde",
  "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "exalta_core"
+version = "0.1.0"
+dependencies = [
+ "quick-xml",
+ "reqwest",
+ "serde",
  "tokio",
 ]
 

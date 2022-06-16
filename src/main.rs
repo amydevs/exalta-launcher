@@ -1,15 +1,18 @@
-use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc::{Sender, Receiver, channel};
 
 use directories::UserDirs;
 use exalta_core::{ExaltaClient, auth::{AuthController, account::Account}};
 use launchargs::LaunchArgs;
+use serde::{Serialize, Deserialize};
 use tokio::{process::Command, runtime::Runtime};
+
+mod login;
+mod play;
 
 mod args;
 mod launchargs;
 
-
-use eframe::egui;
+use eframe::egui::{self, Response};
 
 fn main() {
     let options = eframe::NativeOptions::default();
@@ -20,111 +23,96 @@ fn main() {
     );
 }
 
-struct ExaltaLauncher {
+#[derive(Serialize, Deserialize, Clone)]
+struct LauncherAuth {
     username: String,
-    password: String,
-    auth_con: Option<AuthController>
+    password: String
+}
+struct ResultTimeWrapper {
+    result: Result<(), Box<dyn std::error::Error>>,
+    time: std::time::Instant
+}
+struct ExaltaLauncher {
+    auth: LauncherAuth,
+    auth_con: Option<AuthController>,
+
+    entry: keyring::Entry,
+    runtime: Runtime,
+
+    run_res: ResultTimeWrapper,
 }
 
 impl Default for ExaltaLauncher {
     fn default() -> Self {
+        let entry = keyring::Entry::new(&"exalt", &"jsondata");
+        let mut auth = LauncherAuth {
+            username: String::new(),
+            password: String::new()
+        };
+        if let Some(val) = entry.get_password().ok() {
+            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+                auth = foundauth
+            };
+        };
+
         Self {
-            username: "".to_owned(),
-            password: "".to_owned(),
-            auth_con: None
+            auth,
+            auth_con: None,
+            entry,
+            runtime: Runtime::new().unwrap(),
+            run_res: ResultTimeWrapper {
+                result: Ok(()),
+                time: std::time::Instant::now()
+            }
         }
     }
 }
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+        if let Err(err) = egui::CentralPanel::default().show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
             ui.heading("Exalta Launcher");
-
-            let rt  = Runtime::new().unwrap();
 
             // play
             if self.auth_con.is_some() {
-                ui.horizontal_centered(|ui| {
-                    if ui.button("Logout").clicked() {
-                        self.auth_con = None;
-                    }
-                    if ui.button("Play").clicked() {
-                        if rt.block_on(self.auth_con.as_ref().unwrap().verify()).is_ok() {
-                            load(&self.auth_con.as_ref().unwrap().account, self.username.as_str()).ok();
-                        }
-                        else if let Some(resauth) = rt.block_on(
-                            ExaltaClient::new().unwrap().login(
-                                self.username.as_str(), self.password.as_str()
-                        )).ok() {
-                            self.auth_con = Some(resauth);
-                        }
-                        else {
-                            self.auth_con = None;
-                        }
-                    }
-                });
-                // ui.horizontal(|ui| {
-                //     if ui.button("Logout").clicked() {
-                //         self.auth_con = None;
-                //     }
-                //     if ui.button("Play").clicked() {
-                //         self.auth_con.
-                //     }
-                // });
+                self.render_play(ui)
             }
             // login
             else {
-                ui.vertical_centered_justified(|ui| {
-                    ui.vertical_centered_justified(|ui| {
-                        ui.label("Username: ");
-                        ui.text_edit_singleline(&mut self.username);
-                    });
-                    ui.add_space(10.);
+                self.render_login(ui)
+            }
+        }).inner {
+            self.run_res = ResultTimeWrapper {
+                result: Err(err),
+                time: std::time::Instant::now()
+            };
+        };
 
+        if let Err(e) = &self.run_res.result {
+            if &self.run_res.time.elapsed().as_secs() < &5 {
+                egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
                     ui.vertical_centered_justified(|ui| {
-                        ui.label("Password: ");
-                        ui.add(egui::TextEdit::singleline(&mut self.password).password(true));
+                        ui.label(e.to_string());
                     });
-                    ui.add_space(10.);
-
-                    if ui.button("Login").clicked() {
-                        if let Some(resauth) = rt.block_on(
-                            ExaltaClient::new().unwrap().login(
-                                self.username.as_str(), self.password.as_str()
-                            )
-                        ).ok() {
-                            self.auth_con = Some(resauth);
-                        }
-                        else {
-                            println!("Login failed");
-                        }
-                    }
                 });
             }
-        });
-    }
-}
-
-// #[tokio::main]
-fn load(account: &Account, username: &str) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(user_dirs) = UserDirs::new() {
-        if let Some(document_dir) = user_dirs.document_dir() {
-            let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
-            let args = serde_json::to_string(&LaunchArgs {
-                platform: "Deca".to_string(),
-                guid: base64::encode(username),
-                token: base64::encode(account.access_token.clone()),
-                token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                token_expiration: base64::encode(account.access_token_expiration.clone()),
-                env: 4,
-                server_name: None,
-            })?;
-            println!("{}", args);
-            Command::new(execpath.to_str().unwrap())
-                .args(&[format!("data:{}", args)])
-                .spawn()?;
         }
     }
-    Ok(())
+}
+impl ExaltaLauncher {
+    fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let auth_con = self.runtime.block_on(
+            ExaltaClient::new().unwrap().login(
+                &self.auth.username.as_str(), &self.auth.password.as_str()
+            )
+        )?;
+
+        self.run_res.result = Ok(());
+        self.auth_con = Some(auth_con);
+        
+        if let Some(json) = serde_json::to_string(&self.auth).ok() {
+            self.entry.set_password(json.as_str())?;
+        }
+        Ok(())
+    }
 }

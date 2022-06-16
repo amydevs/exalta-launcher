@@ -1,4 +1,4 @@
-use auth::{account::Account, AuthController};
+use auth::{account::Account, AuthController, err::AuthError};
 use reqwest::{Client, Url, header::{HeaderMap, HeaderValue}};
 
 pub mod config;
@@ -60,7 +60,8 @@ impl ExaltaClient {
             .form(&userpassparams)
             .send()
             .await?;
-        let account = quick_xml::de::from_str::<Account>(resp.text().await?.as_str())?;
+        let account = quick_xml::de::from_str::<Account>(resp.text().await?.as_str())
+            .map_err(|e| AuthError(String::from("LoginFailed")))?;
         
         Ok(AuthController{
             account,

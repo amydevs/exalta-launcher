@@ -11,4 +11,3 @@ impl fmt::Display for AuthError {
 }
 
 impl Error for AuthError {}
-

@@ -2,19 +2,25 @@ use directories::UserDirs;
 use eframe::egui::Ui;
 use tokio::process::Command;
 
-use crate::{ExaltaLauncher, launchargs::LaunchArgs};
+use crate::{launchargs::LaunchArgs, ExaltaLauncher};
 
 impl ExaltaLauncher {
     pub fn render_play(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
         ui.vertical_centered_justified(|ui| {
             ui.add_space(10.);
-            ui.label(format!("Welcome back, {}.", self.auth_con.as_ref().unwrap().account.name));
+            ui.label(format!(
+                "Welcome back, {}.",
+                self.auth_con.as_ref().unwrap().account.name
+            ));
             ui.add_space(10.);
             if ui.button("Play").clicked() {
-                if self.runtime.block_on(self.auth_con.as_ref().unwrap().verify()).is_ok() {
+                if self
+                    .runtime
+                    .block_on(self.auth_con.as_ref().unwrap().verify())
+                    .is_ok()
+                {
                     self.load().ok();
-                }
-                else if self.login().is_err() {
+                } else if self.login().is_err() {
                     self.auth_con = None;
                 }
             }
@@ -23,7 +29,8 @@ impl ExaltaLauncher {
                 self.auth_con = None;
             }
             Ok(())
-        }).inner
+        })
+        .inner
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(user_dirs) = UserDirs::new() {
@@ -34,8 +41,12 @@ impl ExaltaLauncher {
                         platform: "Deca".to_string(),
                         guid: base64::encode(&self.auth.username),
                         token: base64::encode(auth_con.account.access_token.clone()),
-                        token_timestamp: base64::encode(auth_con.account.access_token_timestamp.clone()),
-                        token_expiration: base64::encode(auth_con.account.access_token_expiration.clone()),
+                        token_timestamp: base64::encode(
+                            auth_con.account.access_token_timestamp.clone(),
+                        ),
+                        token_expiration: base64::encode(
+                            auth_con.account.access_token_expiration.clone(),
+                        ),
                         env: 4,
                         server_name: None,
                     })?;

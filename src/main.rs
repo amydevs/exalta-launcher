@@ -1,9 +1,12 @@
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 use directories::UserDirs;
-use exalta_core::{ExaltaClient, auth::{AuthController, account::Account}};
+use exalta_core::{
+    auth::{account::Account, AuthController},
+    ExaltaClient,
+};
 use launchargs::LaunchArgs;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use tokio::{process::Command, runtime::Runtime};
 
 mod login;
@@ -26,11 +29,11 @@ fn main() {
 #[derive(Serialize, Deserialize, Clone)]
 struct LauncherAuth {
     username: String,
-    password: String
+    password: String,
 }
 struct ResultTimeWrapper {
     result: Result<(), Box<dyn std::error::Error>>,
-    time: std::time::Instant
+    time: std::time::Instant,
 }
 struct ExaltaLauncher {
     auth: LauncherAuth,
@@ -47,7 +50,7 @@ impl Default for ExaltaLauncher {
         let entry = keyring::Entry::new(&"exalt", &"jsondata");
         let mut auth = LauncherAuth {
             username: String::new(),
-            password: String::new()
+            password: String::new(),
         };
         if let Some(val) = entry.get_password().ok() {
             if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
@@ -62,29 +65,32 @@ impl Default for ExaltaLauncher {
             runtime: Runtime::new().unwrap(),
             run_res: ResultTimeWrapper {
                 result: Ok(()),
-                time: std::time::Instant::now()
-            }
+                time: std::time::Instant::now(),
+            },
         }
     }
 }
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let Err(err) = egui::CentralPanel::default().show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
-            ui.heading("Exalta Launcher");
+        if let Err(err) = egui::CentralPanel::default()
+            .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
+                ui.heading("Exalta Launcher");
 
-            // play
-            if self.auth_con.is_some() {
-                self.render_play(ui)
-            }
-            // login
-            else {
-                self.render_login(ui)
-            }
-        }).inner {
+                // play
+                if self.auth_con.is_some() {
+                    self.render_play(ui)
+                }
+                // login
+                else {
+                    self.render_login(ui)
+                }
+            })
+            .inner
+        {
             self.run_res = ResultTimeWrapper {
                 result: Err(err),
-                time: std::time::Instant::now()
+                time: std::time::Instant::now(),
             };
         };
 
@@ -102,14 +108,14 @@ impl eframe::App for ExaltaLauncher {
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let auth_con = self.runtime.block_on(
-            ExaltaClient::new().unwrap().login(
-                &self.auth.username.as_str(), &self.auth.password.as_str()
-            )
+            ExaltaClient::new()
+                .unwrap()
+                .login(&self.auth.username.as_str(), &self.auth.password.as_str()),
         )?;
 
         self.run_res.result = Ok(());
         self.auth_con = Some(auth_con);
-        
+
         if let Some(json) = serde_json::to_string(&self.auth).ok() {
             self.entry.set_password(json.as_str())?;
         }

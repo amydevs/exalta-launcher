@@ -1,4 +1,4 @@
-use reqwest::{Url, Client, Response};
+use reqwest::{Client, Response, Url};
 
 use self::account::Account;
 use self::err::AuthError;
@@ -18,13 +18,11 @@ impl AuthController {
         // verify
         let tokenparams = vec![
             ("clientToken", crate::CLIENT_TOKEN),
-            ("accessToken", &self.account.access_token)
+            ("accessToken", &self.account.access_token),
         ];
-        let userpassparams = [
-            tokenparams.clone(),
-            crate::DEFAULT_PARAMS.to_vec()
-        ].concat();
-        let resp = self.client
+        let userpassparams = [tokenparams.clone(), crate::DEFAULT_PARAMS.to_vec()].concat();
+        let resp = self
+            .client
             .post(self.base_url.join("account/verifyAccessTokenClient")?)
             .form(&userpassparams)
             .send()
@@ -32,8 +30,7 @@ impl AuthController {
         let boolcheck = resp.text().await?.to_lowercase().contains("success");
         if boolcheck {
             Ok(boolcheck)
-        }
-        else {
+        } else {
             return Err(AuthError(String::from("Invalid access token!")).into());
         }
     }

@@ -1,9 +1,9 @@
-use eframe::egui::{Ui, self};
+use eframe::egui::{self, Ui};
 
 use crate::ExaltaLauncher;
 
 impl ExaltaLauncher {
-    pub fn render_login(&mut self, ui: &mut Ui)-> Result<(), Box<dyn std::error::Error>> {
+    pub fn render_login(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
         ui.vertical_centered_justified(|ui| {
             ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
                 ui.label("Username: ");
@@ -12,7 +12,8 @@ impl ExaltaLauncher {
                     self.login()?;
                 }
                 Ok(())
-            }).inner?;
+            })
+            .inner?;
             ui.add_space(10.);
 
             ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
@@ -22,13 +23,15 @@ impl ExaltaLauncher {
                     self.login()?;
                 }
                 Ok(())
-            }).inner?;
+            })
+            .inner?;
             ui.add_space(10.);
 
             if ui.button("Login").clicked() {
                 self.login()?;
             }
             Ok(())
-        }).inner
+        })
+        .inner
     }
 }

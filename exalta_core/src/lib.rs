@@ -63,8 +63,13 @@ impl ExaltaClient {
             .form(&userpassparams)
             .send()
             .await?;
-        let account = quick_xml::de::from_str::<Account>(resp.text().await?.as_str())
-            .map_err(|e| AuthError(format!("Login Failed ({})", e)))?;
+
+        let resp_text = resp.text().await?;
+        if resp_text.to_lowercase().starts_with("<error>") {
+            return Err(AuthError(String::from("Credentials Incorrect")).into());
+        }
+        let account = quick_xml::de::from_str::<Account>(resp_text.as_str())
+            .map_err(|e| AuthError(e.to_string()))?;
 
         Ok(AuthController {
             account,

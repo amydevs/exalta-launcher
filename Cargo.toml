@@ -2,6 +2,7 @@
 name = "exalta"
 version = "0.1.0"
 edition = "2021"
+default-run = "ui"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
@@ -21,3 +22,11 @@ clap = { version = "3.2.3", features = ["derive"] }
 exalta_core = { path = "exalta_core" }
 
 keyring = "1"
+
+[[bin]]
+name = "ui"
+path = "src/main.rs"
+
+[[bin]]
+name = "cli"
+path = "src/cli.rs"

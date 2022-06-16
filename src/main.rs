@@ -1,13 +1,9 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
-
-use directories::UserDirs;
 use exalta_core::{
-    auth::{account::Account, AuthController},
+    auth::AuthController,
     ExaltaClient,
 };
-use launchargs::LaunchArgs;
 use serde::{Deserialize, Serialize};
-use tokio::{process::Command, runtime::Runtime};
+use tokio::runtime::Runtime;
 
 mod login;
 mod play;
@@ -15,7 +11,7 @@ mod play;
 mod args;
 mod launchargs;
 
-use eframe::egui::{self, Response};
+use eframe::egui;
 
 fn main() {
     let options = eframe::NativeOptions::default();

@@ -1,4 +1,4 @@
-use reqwest::{Client, Response, Url};
+use reqwest::{Client, Url};
 
 use self::account::Account;
 use self::err::AuthError;

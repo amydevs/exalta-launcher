@@ -45,7 +45,7 @@ impl ExaltaClient {
     }
 
     pub async fn login(
-        mut self,
+        self,
         username: &str,
         password: &str,
     ) -> Result<AuthController, Box<dyn std::error::Error>> {

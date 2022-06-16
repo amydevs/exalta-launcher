@@ -74,6 +74,7 @@ impl Default for ExaltaLauncher {
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_pixels_per_point(2.0);
         if let Err(err) = egui::CentralPanel::default()
             .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
                 ui.heading("Exalta Launcher");

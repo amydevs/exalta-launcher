@@ -37,6 +37,7 @@ struct ResultTimeWrapper {
 }
 struct ExaltaLauncher {
     auth: LauncherAuth,
+    auth_save: bool,
     auth_con: Option<AuthController>,
 
     entry: keyring::Entry,
@@ -47,19 +48,14 @@ struct ExaltaLauncher {
 
 impl Default for ExaltaLauncher {
     fn default() -> Self {
-        let entry = keyring::Entry::new(&"exalt", &"jsondata");
-        let mut auth = LauncherAuth {
-            username: String::new(),
-            password: String::new(),
-        };
-        if let Some(val) = entry.get_password().ok() {
-            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
-                auth = foundauth
-            };
-        };
+        let entry = keyring::Entry::new(&"exalt", &"jsondata");        
 
-        Self {
-            auth,
+        let mut self_inst = Self {
+            auth: LauncherAuth {
+                username: String::new(),
+                password: String::new(),
+            },
+            auth_save: true,
             auth_con: None,
             entry,
             runtime: Runtime::new().unwrap(),
@@ -67,7 +63,16 @@ impl Default for ExaltaLauncher {
                 result: Ok(()),
                 time: std::time::Instant::now(),
             },
-        }
+        };
+
+        if let Some(val) = self_inst.entry.get_password().ok() {
+            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+                self_inst.auth = foundauth;
+                self_inst.login().ok();
+            };
+        };
+
+        self_inst
     }
 }
 
@@ -116,9 +121,12 @@ impl ExaltaLauncher {
         self.run_res.result = Ok(());
         self.auth_con = Some(auth_con);
 
-        if let Some(json) = serde_json::to_string(&self.auth).ok() {
-            self.entry.set_password(json.as_str())?;
+        if self.auth_save {
+            if let Some(json) = serde_json::to_string(&self.auth).ok() {
+                self.entry.set_password(json.as_str())?;
+            }
         }
+        
         Ok(())
     }
 }

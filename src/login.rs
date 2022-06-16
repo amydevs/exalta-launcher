@@ -15,7 +15,6 @@ impl ExaltaLauncher {
             })
             .inner?;
             ui.add_space(10.);
-
             ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
                 ui.label("Password: ");
                 let re = ui.add(egui::TextEdit::singleline(&mut self.auth.password).password(true));
@@ -26,7 +25,10 @@ impl ExaltaLauncher {
             })
             .inner?;
             ui.add_space(10.);
-
+            ui.vertical_centered_justified(|ui| {
+                ui.checkbox(&mut self.auth_save, "Save Login");
+            });
+            ui.add_space(10.);
             if ui.button("Login").clicked() {
                 self.login()?;
             }

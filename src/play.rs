@@ -9,8 +9,11 @@ impl ExaltaLauncher {
         ui.vertical_centered_justified(|ui| {
             ui.add_space(10.);
             ui.label(format!(
-                "Welcome back, {}.",
-                self.auth_con.as_ref().unwrap().account.name
+                "Welcome back, {}.\nYou have {} credits, {} forgefire, and {} fame.",
+                self.auth_con.as_ref().unwrap().account.name,
+                self.auth_con.as_ref().unwrap().account.credits,
+                self.auth_con.as_ref().unwrap().account.forge_fire_energy,
+                self.auth_con.as_ref().unwrap().account.stats.fame,
             ));
             ui.add_space(10.);
             if ui.button("Play").clicked() {

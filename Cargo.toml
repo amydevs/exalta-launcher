@@ -2,7 +2,7 @@
 name = "exalta"
 version = "0.2.0"
 edition = "2021"
-default-run = "exalta_ui"
+default-run = "exalta"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
@@ -27,9 +27,9 @@ keyring = "1"
 winreg = "0.10.1"
 
 [[bin]]
-name = "exalta_ui"
+name = "exalta"
 path = "src/main.rs"
 
 [[bin]]
-name = "exalta_cli"
+name = "exalta-cli"
 path = "src/cli.rs"

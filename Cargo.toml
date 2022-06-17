@@ -23,6 +23,9 @@ exalta_core = { path = "exalta_core" }
 
 keyring = "1"
 
+[target.'cfg(windows)'.dependencies]
+winreg = "0.10.1"
+
 [[bin]]
 name = "ui"
 path = "src/main.rs"

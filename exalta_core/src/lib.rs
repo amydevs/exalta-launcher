@@ -5,6 +5,7 @@ use reqwest::{
 };
 
 pub mod auth;
+mod misc;
 pub mod config;
 
 const BASE_URL: &str = "https://www.realmofthemadgod.com/";

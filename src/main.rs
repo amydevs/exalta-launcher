@@ -2,6 +2,7 @@ use exalta_core::{
     auth::AuthController,
     ExaltaClient,
 };
+use registries::UpdateError;
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
 
@@ -10,6 +11,7 @@ mod play;
 
 mod args;
 mod launchargs;
+mod registries;
 
 use eframe::egui;
 
@@ -45,6 +47,32 @@ struct ExaltaLauncher {
 impl Default for ExaltaLauncher {
     fn default() -> Self {
         let entry = keyring::Entry::new(&"exalt", &"jsondata");        
+        
+        let mut run_res = ResultTimeWrapper {
+            result: Ok(()),
+            time: std::time::Instant::now(),
+        };
+
+        let runtime = Runtime::new().unwrap();
+
+        if cfg!(windows) {
+            let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
+                let buildid = crate::registries::get_build_id()?;
+                let client = ExaltaClient::new()?;
+                let buildhash = runtime.block_on(client.init("Unity", None))?.build_hash;
+                if buildid != buildhash {
+                    return Err(Box::new(UpdateError(format!(
+                        "An update for the game is available, please run the official launcher to update the game first."
+                    ))));
+                }
+                Ok(())
+            };
+            
+            run_res = ResultTimeWrapper {
+                result: regirunner(),
+                time: std::time::Instant::now(),
+            };
+        }
 
         let mut self_inst = Self {
             auth: LauncherAuth {
@@ -54,11 +82,8 @@ impl Default for ExaltaLauncher {
             auth_save: true,
             auth_con: None,
             entry,
-            runtime: Runtime::new().unwrap(),
-            run_res: ResultTimeWrapper {
-                result: Ok(()),
-                time: std::time::Instant::now(),
-            },
+            runtime,
+            run_res
         };
 
         if let Some(val) = self_inst.entry.get_password().ok() {

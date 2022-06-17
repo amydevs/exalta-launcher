@@ -49,7 +49,8 @@ struct ExaltaLauncher {
 impl Default for ExaltaLauncher {
     fn default() -> Self {
         let entry = keyring::Entry::new(&"exalt", &"jsondata");        
-        
+        let password_res = entry.get_password();
+
         let mut run_res = ResultTimeWrapper {
             result: Ok(()),
             time: std::time::Instant::now(),
@@ -58,7 +59,7 @@ impl Default for ExaltaLauncher {
         let runtime = Runtime::new().unwrap();
 
         if cfg!(windows) {
-            let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
+            let updatechecker = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
                 let client = ExaltaClient::new()?;
                 let buildhash = runtime.block_on(client.init("Unity", None))?.build_hash;
@@ -69,9 +70,8 @@ impl Default for ExaltaLauncher {
                 }
                 Ok(())
             };
-            
             run_res = ResultTimeWrapper {
-                result: regirunner().map_err(|x| {
+                result: updatechecker().map_err(|x| {
                     if x.is::<UpdateError>() {
                         x
                     }
@@ -80,6 +80,12 @@ impl Default for ExaltaLauncher {
                     }
                 }),
                 time: std::time::Instant::now(),
+            };
+            let credchecker = || -> Result<(), Box<dyn std::error::Error>> {
+                if password_res.is_err() {
+                    
+                }
+                Ok(())
             };
         }
 
@@ -95,8 +101,8 @@ impl Default for ExaltaLauncher {
             run_res
         };
 
-        if let Some(val) = self_inst.entry.get_password().ok() {
-            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+        if let Ok(val) = password_res {
+            if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
                 self_inst.auth = foundauth;
                 self_inst.login().ok();
             };

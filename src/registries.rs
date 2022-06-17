@@ -20,6 +20,23 @@ pub fn get_build_id() -> Result<String, Box<dyn std::error::Error>> {
     }
 }
 
+pub fn get_username_password() -> Result<(String, String), Box<dyn std::error::Error>> {
+    let hklm = RegKey::predef(HKEY_CURRENT_USER);
+    let launcherloc = hklm.open_subkey("SOFTWARE\\DECA Live Operations GmbH\\RotMG Exalt Launcher")?;
+    let mut found_string = None;
+    for row in launcherloc.enum_values() {
+        if let Some((key, val)) = row.ok() {
+            let val = String::from_utf8_lossy(&val.bytes).to_string();
+            
+        }
+    };
+    if let Some(val) = found_string {
+        Ok(val)
+    } else {
+        Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "username and password not found")))
+    }
+}
+
 #[derive(Debug)]
 pub struct RegistryError(pub String);
 

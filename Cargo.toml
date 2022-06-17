@@ -2,17 +2,34 @@
 name = "exalta"
 version = "0.1.0"
 edition = "2021"
+default-run = "ui"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
 
 [dependencies]
-reqwest = { version = "0.11.0", features = ["json"] }
+eframe = "0.18.0"
+
 tokio = { version = "1", features = ["full"] }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-quick-xml = { version = "0.23", features = [ "serialize" ] }
 base64 = "0.13"
 
 directories = "4.0"
 clap = { version = "3.2.3", features = ["derive"] }
+
+exalta_core = { path = "exalta_core" }
+
+keyring = "1"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.10.1"
+
+[[bin]]
+name = "ui"
+path = "src/main.rs"
+
+[[bin]]
+name = "cli"
+path = "src/cli.rs"

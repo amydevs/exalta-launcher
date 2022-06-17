@@ -1,104 +1,163 @@
-use std::collections::HashMap;
+use std::fmt::Error;
 
-use account::Account;
-use clap::Parser;
-use directories::UserDirs;
-use launchargs::LaunchArgs;
-use reqwest::{Url, header::{HeaderMap, HeaderValue}};
-use tokio::process::Command;
+use exalta_core::{
+    auth::AuthController,
+    ExaltaClient,
+};
+use registries::UpdateError;
+use serde::{Deserialize, Serialize};
+use tokio::runtime::Runtime;
+
+mod login;
+mod play;
 
 mod args;
-mod account;
 mod launchargs;
+mod registries;
 
-const BASE_URL: &str = "https://www.realmofthemadgod.com/";
+use eframe::egui;
 
-const CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
+fn main() {
+    let options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "Exalta Launcher",
+        options,
+        Box::new(|_cc| Box::new(ExaltaLauncher::default())),
+    );
+}
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    //init args
-    let args = crate::args::Args::parse();
-    let USERNAME = args.username.as_str();
-    let PASSWORD = args.password.as_str();
+#[derive(Serialize, Deserialize, Clone)]
+struct LauncherAuth {
+    username: String,
+    password: String,
+}
+struct ResultTimeWrapper {
+    result: Result<(), Box<dyn std::error::Error>>,
+    time: std::time::Instant,
+}
+struct ExaltaLauncher {
+    auth: LauncherAuth,
+    auth_save: bool,
+    auth_con: Option<AuthController>,
 
-    let base_url = Url::parse(BASE_URL)?;
-    let domain = base_url.host_str().unwrap();
+    entry: keyring::Entry,
+    runtime: Runtime,
 
-    // init
-    let mut defheaders = HeaderMap::new();
-    defheaders.insert("Host", domain.parse()?);
-    defheaders.insert("Accept", "*/*".parse()?);
-    defheaders.insert( "Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
-    defheaders.insert( "X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));
-    let client = reqwest::Client::builder()
-        .http1_title_case_headers()
-        .user_agent("UnityPlayer/2020.3.30f1 (UnityWebRequest/1.0, libcurl/7.80.0-DEV)")
-        .default_headers(defheaders)
-        .build()?;
+    run_res: ResultTimeWrapper,
+}
 
-    let mut tokenparams = vec![
-        ("clientToken", CLIENT_TOKEN)
-    ];
-    let defparams = vec![
-        ("game_net", "Unity"),
-        ("play_platform", "Unity"),
-        ("game_net_user_id", ""),
-    ];
+impl Default for ExaltaLauncher {
+    fn default() -> Self {
+        let entry = keyring::Entry::new(&"exalt", &"jsondata");        
+        
+        let mut run_res = ResultTimeWrapper {
+            result: Ok(()),
+            time: std::time::Instant::now(),
+        };
 
-    // login
-    let userpassparams = [
-        tokenparams.clone(),
-        defparams.clone(),
-        vec![
-            ("guid", USERNAME),
-            ("password", PASSWORD),
-        ]
-    ].concat();
-    let resp = client
-        .post(base_url.join("account/verify")?)
-        .form(&userpassparams)
-        .send()
-        .await?;
-    let acc: Account = quick_xml::de::from_str(resp.text().await?.as_str())?;
+        let runtime = Runtime::new().unwrap();
 
-    // verify
-    tokenparams.push(("accessToken", &acc.access_token));
-    let userpassparams = [
-        tokenparams.clone(),
-        defparams.clone()
-    ].concat();
-    let resp = client
-        .post(base_url.join("account/verifyAccessTokenClient")?)
-        .form(&userpassparams)
-        .send()
-        .await?;
+        if cfg!(windows) {
+            let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
+                let buildid = crate::registries::get_build_id()?;
+                let client = ExaltaClient::new()?;
+                let buildhash = runtime.block_on(client.init("Unity", None))?.build_hash;
+                if buildid != buildhash {
+                    return Err(Box::new(UpdateError(String::from(
+                        "An update for the game is available, please run the official launcher to update the game first."
+                    ))));
+                }
+                Ok(())
+            };
+            
+            run_res = ResultTimeWrapper {
+                result: regirunner().map_err(|x| {
+                    if x.is::<UpdateError>() {
+                        x
+                    }
+                    else {
+                        Box::new(UpdateError(String::from("Failed to check for updates.")))
+                    }
+                }),
+                time: std::time::Instant::now(),
+            };
+        }
 
-    if resp.text().await?.to_lowercase().contains("success") {
-        println!("verified");
-    } else {
-        println!("failed");
-    };
-    
-    if let Some(user_dirs) = UserDirs::new() {
-        if let Some(document_dir) = user_dirs.document_dir() {
+        let mut self_inst = Self {
+            auth: LauncherAuth {
+                username: String::new(),
+                password: String::new(),
+            },
+            auth_save: true,
+            auth_con: None,
+            entry,
+            runtime,
+            run_res
+        };
 
-            let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
-            let args = serde_json::to_string(&LaunchArgs {
-                platform: "Deca".to_string(),
-                guid: base64::encode(USERNAME),
-                token: base64::encode(acc.access_token),
-                token_timestamp: base64::encode(acc.access_token_timestamp),
-                token_expiration: base64::encode(acc.access_token_expiration.clone()),
-                env: 4,
-                server_name: None,
-            })?;
-            println!("{}", args);
-            Command::new(execpath.to_str().unwrap())
-                .args(&[format!("data:{}", args)])
-                .spawn()?;
+        if let Some(val) = self_inst.entry.get_password().ok() {
+            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+                self_inst.auth = foundauth;
+                self_inst.login().ok();
+            };
+        };
+
+        self_inst
+    }
+}
+
+impl eframe::App for ExaltaLauncher {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_pixels_per_point(2.0);
+        if let Err(err) = egui::CentralPanel::default()
+            .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
+                ui.heading("Exalta Launcher");
+
+                // play
+                if self.auth_con.is_some() {
+                    self.render_play(ui)
+                }
+                // login
+                else {
+                    self.render_login(ui)
+                }
+            })
+            .inner
+        {
+            self.run_res = ResultTimeWrapper {
+                result: Err(err),
+                time: std::time::Instant::now(),
+            };
+        };
+
+        if let Err(e) = &self.run_res.result {
+            if &self.run_res.time.elapsed().as_secs() < &5 {
+                egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+                    ui.vertical_centered_justified(|ui| {
+                        ui.label(e.to_string());
+                    });
+                });
+            }
         }
     }
+}
+impl ExaltaLauncher {
+    fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let auth_con = self.runtime.block_on(
+            ExaltaClient::new()
+                .unwrap()
+                .login(&self.auth.username.as_str(), &self.auth.password.as_str()),
+        )?;
 
-    Ok(())
+        self.run_res.result = Ok(());
+        self.auth_con = Some(auth_con);
+
+        if self.auth_save {
+            if let Some(json) = serde_json::to_string(&self.auth).ok() {
+                self.entry.set_password(json.as_str())?;
+            }
+        }
+        
+        Ok(())
+    }
 }

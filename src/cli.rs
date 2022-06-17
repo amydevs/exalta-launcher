@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 token_expiration: base64::encode(authcon.account.access_token_expiration.clone()),
                 env: 4,
                 server_name: None,
-            })?;
+            })?.replace(",\"serverName\":null", ",\"serverName\":");
             println!("{}", args);
             Command::new(execpath.to_str().unwrap())
                 .args(&[format!("data:{}", args)])

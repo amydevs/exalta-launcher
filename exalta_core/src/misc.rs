@@ -20,7 +20,7 @@ impl ExaltaClient {
 
         let resp = self
             .client
-            .post(self.base_url.join("app/init")?)
+            .post(self.base_url.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
             .form(&params)
             .send()
             .await?;

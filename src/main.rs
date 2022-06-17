@@ -1,3 +1,5 @@
+use std::fmt::Error;
+
 use exalta_core::{
     auth::AuthController,
     ExaltaClient,
@@ -61,7 +63,7 @@ impl Default for ExaltaLauncher {
                 let client = ExaltaClient::new()?;
                 let buildhash = runtime.block_on(client.init("Unity", None))?.build_hash;
                 if buildid != buildhash {
-                    return Err(Box::new(UpdateError(format!(
+                    return Err(Box::new(UpdateError(String::from(
                         "An update for the game is available, please run the official launcher to update the game first."
                     ))));
                 }
@@ -69,7 +71,14 @@ impl Default for ExaltaLauncher {
             };
             
             run_res = ResultTimeWrapper {
-                result: regirunner(),
+                result: regirunner().map_err(|x| {
+                    if x.is::<UpdateError>() {
+                        x
+                    }
+                    else {
+                        Box::new(UpdateError(String::from("Failed to check for updates.")))
+                    }
+                }),
                 time: std::time::Instant::now(),
             };
         }

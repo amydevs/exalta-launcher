@@ -50,6 +50,7 @@ pub struct AppSettings {
 
     pub salesforce_mobile: String,
 
+    #[serde(rename = "UGDOpenSubmission")]
     pub ugd_open_submission: String,
 
     pub forge_max_ingredients: String,
@@ -66,6 +67,7 @@ pub struct AppSettings {
 
     pub build_version: String,
 
+    #[serde(rename = "BuildCDN")]
     pub build_cdn: String,
 
     pub launcher_build_id: String,
@@ -74,11 +76,11 @@ pub struct AppSettings {
 
     pub launcher_build_version: String,
 
+    #[serde(rename = "LauncherBuildCDN")]
     pub launcher_build_cdn: String,
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
 pub struct PotionPurchaseCosts {
     pub cost: Vec<String>,
 }

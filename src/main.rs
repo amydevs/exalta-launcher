@@ -131,7 +131,7 @@ impl eframe::App for ExaltaLauncher {
         };
 
         if let Err(e) = &self.run_res.result {
-            if &self.run_res.time.elapsed().as_secs() < &5 {
+            if &self.run_res.time.elapsed().as_secs() < &8 {
                 egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
                     ui.vertical_centered_justified(|ui| {
                         ui.label(e.to_string());
@@ -149,7 +149,6 @@ impl ExaltaLauncher {
                 .login(&self.auth.username.as_str(), &self.auth.password.as_str()),
         )?;
 
-        self.run_res.result = Ok(());
         self.auth_con = Some(auth_con);
 
         if self.auth_save {

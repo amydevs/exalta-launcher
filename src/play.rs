@@ -54,7 +54,7 @@ impl ExaltaLauncher {
                         ),
                         env: 4,
                         server_name: None,
-                    })?;
+                    })?.replace(",\"serverName\":null", ",\"serverName\":");
                     println!("{}", args);
                     Command::new(execpath.to_str().unwrap())
                         .args(&[format!("data:{}", args)])

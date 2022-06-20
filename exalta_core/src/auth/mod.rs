@@ -1,7 +1,6 @@
 use reqwest::{Client, Url};
 
-
-use crate::{CLIENT_TOKEN, DEFAULT_PARAMS, BASE_URL, CLIENT, coll_to_owned};
+use crate::{coll_to_owned, BASE_URL, CLIENT, CLIENT_TOKEN, DEFAULT_PARAMS};
 
 use self::account::Account;
 use self::err::AuthError;
@@ -12,11 +11,15 @@ pub mod err;
 pub struct AuthInfo {
     pub username: String,
     pub password: String,
-    pub session_token: String
+    pub session_token: String,
 }
 impl Default for AuthInfo {
     fn default() -> Self {
-        Self { username: Default::default(), password: Default::default(), session_token: Default::default() }
+        Self {
+            username: Default::default(),
+            password: Default::default(),
+            session_token: Default::default(),
+        }
     }
 }
 impl AuthInfo {
@@ -30,17 +33,17 @@ impl AuthInfo {
         self
     }
 }
-pub async fn request_account(
-    auth_info: &AuthInfo
-) -> Result<Account, Box<dyn std::error::Error>> {
+pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn std::error::Error>> {
     if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
-
         let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
 
         let userpassparams = [
             tokenparams,
             DEFAULT_PARAMS.read()?.to_vec(),
-            coll_to_owned(vec![("guid", &auth_info.username), ("password", &auth_info.password)]),
+            coll_to_owned(vec![
+                ("guid", &auth_info.username),
+                ("password", &auth_info.password),
+            ]),
         ]
         .concat();
         let resp = CLIENT
@@ -55,8 +58,7 @@ pub async fn request_account(
         }
         Ok(quick_xml::de::from_str::<Account>(resp_text.as_str())
             .map_err(|e| AuthError(e.to_string()))?)
-    }
-    else {
+    } else {
         todo!()
     }
 }

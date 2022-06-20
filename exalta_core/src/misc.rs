@@ -1,10 +1,10 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::{DEFAULT_PARAMS, CLIENT, BASE_URL, coll_to_owned};
+use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 
 pub async fn init(
     game_net: Option<&str>,
-    access_token: Option<&str>
+    access_token: Option<&str>,
 ) -> Result<AppSettings, Box<dyn std::error::Error>> {
     let mut params = DEFAULT_PARAMS.read()?.clone();
 
@@ -13,19 +13,15 @@ pub async fn init(
     }
 
     if let Some(access_token) = access_token {
-        params = [
-            coll_to_owned(vec![("accessToken", access_token)]),
-            params
-        ].concat();
+        params = [coll_to_owned(vec![("accessToken", access_token)]), params].concat();
     }
-    
 
     let resp = CLIENT
         .post(BASE_URL.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
         .form(&params)
         .send()
         .await?;
-        let resp_text = resp.text().await?;
+    let resp_text = resp.text().await?;
     Ok(quick_xml::de::from_str::<AppSettings>(resp_text.as_str())?)
 }
 

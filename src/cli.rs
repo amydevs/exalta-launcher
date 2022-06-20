@@ -1,6 +1,6 @@
 use clap::Parser;
 use directories::UserDirs;
-use exalta_core::auth::{AuthInfo, request_account, verify_access_token};
+use exalta_core::auth::{request_account, verify_access_token, AuthInfo};
 use launchargs::LaunchArgs;
 use tokio::process::Command;
 
@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let auth_info = AuthInfo::default().username_password(username, password);
     let account = request_account(&auth_info).await?;
     verify_access_token(&account.access_token).await?;
-    
+
     if let Some(user_dirs) = UserDirs::new() {
         if let Some(document_dir) = user_dirs.document_dir() {
             let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
@@ -29,7 +29,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 token_expiration: base64::encode(account.access_token_expiration),
                 env: 4,
                 server_name: None,
-            })?.replace(",\"serverName\":null", ",\"serverName\":");
+            })?
+            .replace(",\"serverName\":null", ",\"serverName\":");
             println!("{}", args);
             Command::new(execpath.to_str().unwrap())
                 .args(&[format!("data:{}", args)])

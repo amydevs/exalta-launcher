@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use exalta_core::auth::{*, account::Account};
+use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
 
@@ -46,8 +46,8 @@ struct ExaltaLauncher {
 
 impl Default for ExaltaLauncher {
     fn default() -> Self {
-        let entry = keyring::Entry::new(&"exalt", &"jsondata");        
-        
+        let entry = keyring::Entry::new(&"exalt", &"jsondata");
+
         let mut run_res = ResultTimeWrapper {
             result: Ok(()),
             time: std::time::Instant::now(),
@@ -62,7 +62,9 @@ impl Default for ExaltaLauncher {
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
                 let client = ExaltaClient::new()?;
-                let buildhash = runtime.block_on(exalta_core::misc::init(None, None))?.build_hash;
+                let buildhash = runtime
+                    .block_on(exalta_core::misc::init(None, None))?
+                    .build_hash;
                 if buildid != buildhash {
                     return Err(Box::new(UpdateError(String::from(
                         "An update for the game is available, please run the official launcher to update the game first."
@@ -70,13 +72,12 @@ impl Default for ExaltaLauncher {
                 }
                 Ok(())
             };
-            
+
             run_res = ResultTimeWrapper {
                 result: regirunner().map_err(|x| {
                     if x.is::<UpdateError>() {
                         x
-                    }
-                    else {
+                    } else {
                         Box::new(UpdateError(String::from("Failed to check for updates.")))
                     }
                 }),
@@ -93,7 +94,7 @@ impl Default for ExaltaLauncher {
             account: None,
             entry,
             runtime,
-            run_res
+            run_res,
         };
 
         if let Some(val) = self_inst.entry.get_password().ok() {
@@ -144,9 +145,10 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let acc = self.runtime.block_on(
-            request_account(&AuthInfo::default().username_password(&self.auth.username.as_str(), &self.auth.password.as_str()))
-        )?;
+        let acc = self.runtime.block_on(request_account(
+            &AuthInfo::default()
+                .username_password(&self.auth.username.as_str(), &self.auth.password.as_str()),
+        ))?;
 
         self.account = Some(acc);
 
@@ -155,7 +157,7 @@ impl ExaltaLauncher {
                 self.entry.set_password(json.as_str())?;
             }
         }
-        
+
         Ok(())
     }
 }

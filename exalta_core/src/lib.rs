@@ -9,9 +9,7 @@ use reqwest::{
 pub mod auth;
 pub mod misc;
 
-const BASE_URL: Lazy<Url> = Lazy::new(|| {
-    Url::parse("https://www.realmofthemadgod.com/").unwrap()
-});
+const BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
 const CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
 
 static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
@@ -31,7 +29,8 @@ const CLIENT: Lazy<Client> = Lazy::new(|| {
         .http1_title_case_headers()
         .user_agent("UnityPlayer/2020.3.30f1 (UnityWebRequest/1.0, libcurl/7.80.0-DEV)")
         .default_headers(defheaders)
-        .build().unwrap()
+        .build()
+        .unwrap()
 });
 
 pub fn set_game_net_play_platform(game_net: &str) {
@@ -41,5 +40,7 @@ pub fn set_game_net_play_platform(game_net: &str) {
 }
 
 pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {
-    vec.iter().map(|e| (e.0.to_owned(), e.1.to_owned())).collect()
+    vec.iter()
+        .map(|e| (e.0.to_owned(), e.1.to_owned()))
+        .collect()
 }

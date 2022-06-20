@@ -160,7 +160,7 @@ impl ExaltaLauncher {
         if let Some(client) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let (_session_ticket, auth_vec) = client.user().authentication_session_ticket();
-            let ticket = String::from_utf8_lossy(&auth_vec);
+            let ticket = encode_hex(&auth_vec);
             
             println!("{}", ticket);
 
@@ -189,4 +189,13 @@ impl ExaltaLauncher {
         
         Ok(())
     }
+}
+
+fn encode_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for &b in bytes {
+        write!(&mut s, "{:02x}", b).unwrap();
+    }
+    s
 }

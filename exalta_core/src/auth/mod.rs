@@ -6,6 +6,7 @@ use self::account::Account;
 use self::err::AuthError;
 
 pub mod account;
+pub mod steamworks;
 pub mod err;
 
 pub struct AuthInfo {
@@ -34,10 +35,9 @@ impl AuthInfo {
     }
 }
 pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn std::error::Error>> {
-    if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
-        let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
-
-        let userpassparams = [
+    let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
+    let post_params: Result<Vec<(String, String)>, Box<dyn std::error::Error>> = if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
+        Ok([
             tokenparams,
             DEFAULT_PARAMS.read()?.to_vec(),
             coll_to_owned(vec![
@@ -45,10 +45,37 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
                 ("password", &auth_info.password),
             ]),
         ]
-        .concat();
-        let resp = CLIENT
+        .concat())
+    } else if !auth_info.session_token.is_empty() {
+        let sessionticketparams = [
+            coll_to_owned(vec![
+                ("sessionTicket", &auth_info.session_token),
+            ]),
+            DEFAULT_PARAMS.read()?.to_vec(),
+        ];
+        let steam_creds_resp = CLIENT
+            .post(BASE_URL.join("steamworks/getcredentials")?)
+            .form(&sessionticketparams)
+            .send()
+            .await?;
+        let steam_creds = steam_creds_resp.json::<steamworks::Credentials>().await?;
+        Ok([
+            coll_to_owned(vec![
+                ("guid", &steam_creds.guid),
+                ("secret", &steam_creds.secret),
+            ]),
+            tokenparams,
+            DEFAULT_PARAMS.read()?.to_vec(),
+        ]
+        .concat())
+    }
+    else {
+        return Err(AuthError(String::from("No Credentials")).into())
+    };
+
+    let resp = CLIENT
             .post(BASE_URL.join("account/verify")?)
-            .form(&userpassparams)
+            .form(&post_params?)
             .send()
             .await?;
 
@@ -58,9 +85,6 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
         }
         Ok(quick_xml::de::from_str::<Account>(resp_text.as_str())
             .map_err(|e| AuthError(e.to_string()))?)
-    } else {
-        todo!()
-    }
 }
 
 pub async fn verify_access_token(access_token: &str) -> Result<bool, Box<dyn std::error::Error>> {

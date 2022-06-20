@@ -46,7 +46,7 @@ impl ExaltaLauncher {
                     let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
                     let args = serde_json::to_string(&LaunchArgs {
                         platform: "Deca".to_string(),
-                        guid: base64::encode(&self.auth.username),
+                        guid: base64::encode(&self.auth.guid),
                         token: base64::encode(account.access_token.clone()),
                         token_timestamp: base64::encode(account.access_token_timestamp.clone()),
                         token_expiration: base64::encode(account.access_token_expiration.clone()),

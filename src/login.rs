@@ -7,7 +7,7 @@ impl ExaltaLauncher {
         ui.vertical_centered_justified(|ui| {
             ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
                 ui.label("Username: ");
-                let re = ui.text_edit_singleline(&mut self.auth.username);
+                let re = ui.text_edit_singleline(&mut self.auth.guid);
                 if re.lost_focus() && re.ctx.input().key_pressed(egui::Key::Enter) {
                     self.login()?;
                 }

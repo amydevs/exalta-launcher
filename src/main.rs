@@ -26,7 +26,7 @@ fn main() {
 
 #[derive(Serialize, Deserialize, Clone)]
 struct LauncherAuth {
-    username: String,
+    guid: String,
     password: String,
 }
 struct ResultTimeWrapper {
@@ -37,6 +37,8 @@ struct ExaltaLauncher {
     auth: LauncherAuth,
     auth_save: bool,
     account: Option<Account>,
+
+    steam_flag: bool,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -86,16 +88,20 @@ impl Default for ExaltaLauncher {
 
         let mut self_inst = Self {
             auth: LauncherAuth {
-                username: String::new(),
+                guid: String::new(),
                 password: String::new(),
             },
             auth_save: true,
             account: None,
+            steam_flag: std::env::args().collect::<Vec<String>>().into_iter().find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s" ).is_some(),
             entry,
             runtime,
             run_res,
         };
 
+        if self_inst.steam_flag {
+            self_inst.login().ok();
+        }
         if let Some(val) = self_inst.entry.get_password().ok() {
             if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
                 self_inst.auth = foundauth;
@@ -144,22 +150,35 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if !self.auth_save {
-            self.entry.delete_password().ok();
+        if self.steam_flag {
+            use ::steamworks::Client;
+            let (client, _) = Client::init_app(200210)?;
+            self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
+
+            let session_ticket = String::from_utf8_lossy(&client.user().authentication_session_ticket().1).to_string();
+            self.account = Some(self.runtime.block_on(
+                request_account(&AuthInfo::default().session_token(&session_ticket))
+            )?);
         }
-        let acc = self.runtime.block_on(request_account(
-            &AuthInfo::default()
-                .username_password(&self.auth.username.as_str(), &self.auth.password.as_str()),
-        ))?;
-
-        self.account = Some(acc);
-
-        if self.auth_save {
-            if let Ok(json) = serde_json::to_string(&self.auth) {
-                self.entry.set_password(json.as_str()).ok();
+        else {
+            if !self.auth_save {
+                self.entry.delete_password().ok();
             }
+            let acc = self.runtime.block_on(request_account(
+                &AuthInfo::default()
+                    .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
+            ))?;
+    
+            self.account = Some(acc);
+    
+            if self.auth_save {
+                if let Ok(json) = serde_json::to_string(&self.auth) {
+                    self.entry.set_password(json.as_str()).ok();
+                }
+            }
+    
         }
-
+        
         Ok(())
     }
 }

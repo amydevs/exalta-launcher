@@ -52,7 +52,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
                 ("sessionTicket", &auth_info.session_token),
             ]),
             DEFAULT_PARAMS.read()?.to_vec(),
-        ];
+        ].concat();
         let steam_creds_resp = CLIENT
             .post(BASE_URL.join("steamworks/getcredentials")?)
             .form(&sessionticketparams)

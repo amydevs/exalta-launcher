@@ -109,12 +109,15 @@ impl Default for ExaltaLauncher {
         if self_inst.steam_client.is_some() {
             self_inst.login().unwrap();
         }
-        if let Some(val) = self_inst.entry.get_password().ok() {
-            if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
-                self_inst.auth = foundauth;
-                self_inst.login().ok();
+        else {
+            if let Some(val) = self_inst.entry.get_password().ok() {
+                if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+                    self_inst.auth = foundauth;
+                    self_inst.login().ok();
+                };
             };
-        };
+        }
+        
 
         self_inst
     }

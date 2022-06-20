@@ -2,6 +2,7 @@
 
 use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
+use ::steamworks::{AuthTicket, AuthSessionTicketResponse, Callback};
 use tokio::runtime::Runtime;
 
 mod login;
@@ -106,7 +107,7 @@ impl Default for ExaltaLauncher {
         };
 
         if self_inst.steam_client.is_some() {
-            self_inst.login().ok();
+            self_inst.login().unwrap();
         }
         if let Some(val) = self_inst.entry.get_password().ok() {
             if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
@@ -158,10 +159,13 @@ impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(client) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
-            let session_ticket = String::from_utf8_lossy(&client.user().authentication_session_ticket().1).to_string();
-            println!("{}", session_ticket);
+            let (_session_ticket, auth_vec) = client.user().authentication_session_ticket();
+            let ticket = String::from_utf8_lossy(&auth_vec);
+            
+            println!("{}", ticket);
+
             self.account = Some(self.runtime.block_on(
-                request_account(&AuthInfo::default().session_token(&session_ticket))
+                request_account(&AuthInfo::default().session_token(&ticket))
             )?);
         }
         else {

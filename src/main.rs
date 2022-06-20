@@ -62,7 +62,7 @@ impl Default for ExaltaLauncher {
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
                 let client = ExaltaClient::new()?;
-                let buildhash = runtime.block_on(client.init("Unity", None))?.build_hash;
+                let buildhash = runtime.block_on(exalta_core::misc::init(None, None))?.build_hash;
                 if buildid != buildhash {
                     return Err(Box::new(UpdateError(String::from(
                         "An update for the game is available, please run the official launcher to update the game first."

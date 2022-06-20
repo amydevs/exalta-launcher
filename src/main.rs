@@ -38,7 +38,7 @@ struct ExaltaLauncher {
     auth_save: bool,
     account: Option<Account>,
 
-    steam_flag: bool,
+    steam_client: Option<::steamworks::Client>,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -93,13 +93,19 @@ impl Default for ExaltaLauncher {
             },
             auth_save: true,
             account: None,
-            steam_flag: std::env::args().collect::<Vec<String>>().into_iter().find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s" ).is_some(),
+            steam_client:
+                if std::env::args().collect::<Vec<String>>().into_iter().find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s" ).is_some() {
+                    ::steamworks::Client::init_app(200210).map(|x| x.0).ok()
+                }
+                else {
+                  None  
+                },
             entry,
             runtime,
             run_res,
         };
 
-        if self_inst.steam_flag {
+        if self_inst.steam_client.is_some() {
             self_inst.login().ok();
         }
         if let Some(val) = self_inst.entry.get_password().ok() {
@@ -150,12 +156,10 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if self.steam_flag {
-            use ::steamworks::Client;
-            let (client, _) = Client::init_app(200210)?;
+        if let Some(client) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
-
             let session_ticket = String::from_utf8_lossy(&client.user().authentication_session_ticket().1).to_string();
+            println!("{}", session_ticket);
             self.account = Some(self.runtime.block_on(
                 request_account(&AuthInfo::default().session_token(&session_ticket))
             )?);

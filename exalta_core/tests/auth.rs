@@ -20,4 +20,10 @@ mod tests {
             &std::env::var("PASSWORD").unwrap()
         )
     }
+
+    #[tokio::test]
+    async fn test_set_steam() {
+        exalta_core::set_steamid_game_net_play_platform("sdsdkj");
+        println!("{:?}", exalta_core::DEFAULT_PARAMS.read().unwrap());
+    }
 }

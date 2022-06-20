@@ -9,17 +9,17 @@ use reqwest::{
 pub mod auth;
 pub mod misc;
 
-const BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
-const CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
+static BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
+static CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
 
-static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
+pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
     RwLock::new(vec![
         (String::from("game_net"), String::from("Unity")),
         (String::from("play_platform"), String::from("Unity")),
         (String::from("game_net_user_id"), String::from("")),
     ])
 });
-const CLIENT: Lazy<Client> = Lazy::new(|| {
+static CLIENT: Lazy<Client> = Lazy::new(|| {
     let mut defheaders = HeaderMap::new();
     defheaders.insert("Host", BASE_URL.host_str().unwrap().parse().unwrap());
     defheaders.insert("Accept", "*/*".parse().unwrap());
@@ -33,10 +33,17 @@ const CLIENT: Lazy<Client> = Lazy::new(|| {
         .unwrap()
 });
 
-pub fn set_game_net_play_platform(game_net: &str) {
-    let s = game_net.to_owned();
-    DEFAULT_PARAMS.write().unwrap()[0].1 = s.clone();
-    DEFAULT_PARAMS.write().unwrap()[1].1 = s;
+pub fn set_steamid_game_net_play_platform(steamid: &str) {
+    let s = "Unity_steam".to_string();
+    let params = &mut DEFAULT_PARAMS.write().unwrap();
+    for (key, val) in params.iter_mut() {
+        match key.as_str() {
+            "game_net" | "play_platform" => *val = s.clone(),
+            "game_net_user_id" => *val = steamid.to_owned(),
+            _ => {}
+        }
+    }
+    params.push(("steamid".to_owned(), steamid.to_owned()));
 }
 
 pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {

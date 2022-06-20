@@ -61,7 +61,6 @@ impl Default for ExaltaLauncher {
 
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
-                let client = ExaltaClient::new()?;
                 let buildhash = runtime
                     .block_on(exalta_core::misc::init(None, None))?
                     .build_hash;

@@ -106,7 +106,8 @@ impl Default for ExaltaLauncher {
             run_res,
         };
 
-        if self_inst.steam_client.is_some() {
+        if let Some(client) = &self_inst.steam_client {
+            exalta_core::set_steamid_game_net_play_platform(&client.user().steam_id().raw().to_string());
             self_inst.login().unwrap();
         }
         else {

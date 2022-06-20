@@ -145,6 +145,9 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.auth_save {
+            self.entry.delete_password().ok();
+        }
         let acc = self.runtime.block_on(request_account(
             &AuthInfo::default()
                 .username_password(&self.auth.username.as_str(), &self.auth.password.as_str()),
@@ -153,8 +156,8 @@ impl ExaltaLauncher {
         self.account = Some(acc);
 
         if self.auth_save {
-            if let Some(json) = serde_json::to_string(&self.auth).ok() {
-                self.entry.set_password(json.as_str())?;
+            if let Ok(json) = serde_json::to_string(&self.auth) {
+                self.entry.set_password(json.as_str()).ok();
             }
         }
 

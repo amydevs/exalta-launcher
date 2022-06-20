@@ -4,7 +4,6 @@ use exalta_core::{
     auth::AuthController,
     ExaltaClient,
 };
-use registries::UpdateError;
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
 
@@ -13,6 +12,8 @@ mod play;
 
 mod args;
 mod launchargs;
+
+#[cfg(windows)]
 mod registries;
 
 use eframe::egui;
@@ -57,7 +58,10 @@ impl Default for ExaltaLauncher {
 
         let runtime = Runtime::new().unwrap();
 
-        if cfg!(windows) {
+        #[cfg(windows)]
+        {
+            use registries::UpdateError;
+
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
                 let client = ExaltaClient::new()?;

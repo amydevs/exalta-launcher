@@ -49,7 +49,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
     } else if !auth_info.session_token.is_empty() {
         let sessionticketparams = [
             coll_to_owned(vec![
-                ("sessionTicket", &auth_info.session_token),
+                ("sessionticket", &auth_info.session_token),
             ]),
             DEFAULT_PARAMS.read()?.to_vec(),
         ].concat();

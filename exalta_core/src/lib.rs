@@ -1,81 +1,45 @@
-use auth::{account::Account, err::AuthError, AuthController};
+use once_cell::sync::Lazy;
+use std::sync::{Mutex, RwLock};
+
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, Url,
 };
 
 pub mod auth;
-mod misc;
-pub mod config;
+pub mod misc;
 
-const BASE_URL: &str = "https://www.realmofthemadgod.com/";
+const BASE_URL: Lazy<Url> = Lazy::new(|| {
+    Url::parse("https://www.realmofthemadgod.com/").unwrap()
+});
 const CLIENT_TOKEN: &str = "6f97fc3698b237db27591d6b431a9532b14d1922";
-const DEFAULT_PARAMS: [(&str, &str); 3] = [
-    ("game_net", "Unity"),
-    ("play_platform", "Unity"),
-    ("game_net_user_id", ""),
-];
 
-pub trait ExaltaClientTrait {
-    fn new() -> Result<Self, Box<dyn std::error::Error>>
-    where
-        Self: Sized;
+static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
+    RwLock::new(vec![
+        (String::from("game_net"), String::from("Unity")),
+        (String::from("play_platform"), String::from("Unity")),
+        (String::from("game_net_user_id"), String::from("")),
+    ])
+});
+const CLIENT: Lazy<Client> = Lazy::new(|| {
+    let mut defheaders = HeaderMap::new();
+    defheaders.insert("Host", BASE_URL.host_str().unwrap().parse().unwrap());
+    defheaders.insert("Accept", "*/*".parse().unwrap());
+    defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
+    defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));
+    Client::builder()
+        .http1_title_case_headers()
+        .user_agent("UnityPlayer/2020.3.30f1 (UnityWebRequest/1.0, libcurl/7.80.0-DEV)")
+        .default_headers(defheaders)
+        .build().unwrap()
+});
+
+pub fn set_game_net_play_platform(game_net: &str) {
+    let s = game_net.to_owned();
+    DEFAULT_PARAMS.write().unwrap()[0].1 = s.clone();
+    DEFAULT_PARAMS.write().unwrap()[1].1 = s;
 }
 
-pub struct ExaltaClient {
-    pub client: Client,
-    pub base_url: Url,
-}
-
-impl ExaltaClient {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let base_url = Url::parse(BASE_URL)?;
-
-        let mut defheaders = HeaderMap::new();
-        defheaders.insert("Host", base_url.host_str().unwrap().parse()?);
-        defheaders.insert("Accept", "*/*".parse()?);
-        defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
-        defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));
-        let client = Client::builder()
-            .http1_title_case_headers()
-            .user_agent("UnityPlayer/2020.3.30f1 (UnityWebRequest/1.0, libcurl/7.80.0-DEV)")
-            .default_headers(defheaders)
-            .build()?;
-
-        Ok(Self { client, base_url })
-    }
-
-    pub async fn login(
-        self,
-        username: &str,
-        password: &str,
-    ) -> Result<AuthController, Box<dyn std::error::Error>> {
-        let tokenparams = vec![("clientToken", CLIENT_TOKEN)];
-
-        let userpassparams = [
-            tokenparams.clone(),
-            DEFAULT_PARAMS.to_vec(),
-            vec![("guid", username), ("password", password)],
-        ]
-        .concat();
-        let resp = self
-            .client
-            .post(self.base_url.join("account/verify")?)
-            .form(&userpassparams)
-            .send()
-            .await?;
-
-        let resp_text = resp.text().await?;
-        if resp_text.to_lowercase().starts_with("<error>") {
-            return Err(AuthError(String::from("Credentials Incorrect")).into());
-        }
-        let account = quick_xml::de::from_str::<Account>(resp_text.as_str())
-            .map_err(|e| AuthError(e.to_string()))?;
-
-        Ok(AuthController {
-            account,
-            base_url: self.base_url,
-            client: self.client,
-        })
-    }
+pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {
+    vec.iter().map(|e| (e.0.to_owned(), e.1.to_owned())).collect()
 }

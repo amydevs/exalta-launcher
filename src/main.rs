@@ -1,9 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use exalta_core::{
-    auth::AuthController,
-    ExaltaClient,
-};
+use exalta_core::auth::{*, account::Account};
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
 
@@ -39,7 +36,7 @@ struct ResultTimeWrapper {
 struct ExaltaLauncher {
     auth: LauncherAuth,
     auth_save: bool,
-    auth_con: Option<AuthController>,
+    account: Option<Account>,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -93,7 +90,7 @@ impl Default for ExaltaLauncher {
                 password: String::new(),
             },
             auth_save: true,
-            auth_con: None,
+            account: None,
             entry,
             runtime,
             run_res
@@ -118,7 +115,7 @@ impl eframe::App for ExaltaLauncher {
                 ui.heading("Exalta Launcher");
 
                 // play
-                if self.auth_con.is_some() {
+                if self.account.is_some() {
                     self.render_play(ui)
                 }
                 // login
@@ -147,13 +144,11 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let auth_con = self.runtime.block_on(
-            ExaltaClient::new()
-                .unwrap()
-                .login(&self.auth.username.as_str(), &self.auth.password.as_str()),
+        let acc = self.runtime.block_on(
+            request_account(&AuthInfo::default().username_password(&self.auth.username.as_str(), &self.auth.password.as_str()))
         )?;
 
-        self.auth_con = Some(auth_con);
+        self.account = Some(acc);
 
         if self.auth_save {
             if let Some(json) = serde_json::to_string(&self.auth).ok() {

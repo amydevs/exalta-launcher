@@ -713,6 +713,7 @@ dependencies = [
 name = "exalta_core"
 version = "0.1.0"
 dependencies = [
+ "once_cell",
  "quick-xml",
  "reqwest",
  "serde",

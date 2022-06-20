@@ -1,6 +1,6 @@
 use clap::Parser;
 use directories::UserDirs;
-use exalta_core::ExaltaClient;
+use exalta_core::auth::{AuthInfo, request_account, verify_access_token};
 use launchargs::LaunchArgs;
 use tokio::process::Command;
 
@@ -14,9 +14,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let username = args.username.as_str();
     let password = args.password.as_str();
 
-    let exalta_client = ExaltaClient::new()?;
-    let authcon = exalta_client.login(username, password).await?;
-    authcon.verify().await?;
+    let auth_info = AuthInfo::default().username_password(username, password);
+    let account = request_account(&auth_info).await?;
+    verify_access_token(&account.access_token).await?;
     
     if let Some(user_dirs) = UserDirs::new() {
         if let Some(document_dir) = user_dirs.document_dir() {
@@ -24,9 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let args = serde_json::to_string(&LaunchArgs {
                 platform: "Deca".to_string(),
                 guid: base64::encode(username),
-                token: base64::encode(authcon.account.access_token),
-                token_timestamp: base64::encode(authcon.account.access_token_timestamp),
-                token_expiration: base64::encode(authcon.account.access_token_expiration.clone()),
+                token: base64::encode(account.access_token),
+                token_timestamp: base64::encode(account.access_token_timestamp),
+                token_expiration: base64::encode(account.access_token_expiration),
                 env: 4,
                 server_name: None,
             })?.replace(",\"serverName\":null", ",\"serverName\":");

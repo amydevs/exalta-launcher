@@ -1,32 +1,32 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{ExaltaClient, DEFAULT_PARAMS};
+use crate::{DEFAULT_PARAMS, CLIENT, BASE_URL, coll_to_owned};
 
-impl ExaltaClient {
-    pub async fn init(
-        &self,
-        game_net: &str,
-        access_token: Option<&str>
-    ) -> Result<AppSettings, Box<dyn std::error::Error>> {
-        let mut params = DEFAULT_PARAMS.to_vec();
-        params[0].0 = game_net;
+pub async fn init(
+    game_net: Option<&str>,
+    access_token: Option<&str>
+) -> Result<AppSettings, Box<dyn std::error::Error>> {
+    let mut params = DEFAULT_PARAMS.read()?.clone();
 
-        if let Some(access_token) = access_token {
-            params = [
-                vec![("accessToken", access_token)],
-                params
-            ].concat();
-        }
-
-        let resp = self
-            .client
-            .post(self.base_url.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
-            .form(&params)
-            .send()
-            .await?;
-            let resp_text = resp.text().await?;
-        Ok(quick_xml::de::from_str::<AppSettings>(resp_text.as_str())?)
+    if let Some(game_net) = game_net {
+        params[0].0 = game_net.to_owned();
     }
+
+    if let Some(access_token) = access_token {
+        params = [
+            coll_to_owned(vec![("accessToken", access_token)]),
+            params
+        ].concat();
+    }
+    
+
+    let resp = CLIENT
+        .post(BASE_URL.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
+        .form(&params)
+        .send()
+        .await?;
+        let resp_text = resp.text().await?;
+    Ok(quick_xml::de::from_str::<AppSettings>(resp_text.as_str())?)
 }
 
 #[derive(Serialize, Deserialize)]

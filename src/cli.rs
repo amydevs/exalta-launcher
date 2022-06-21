@@ -23,6 +23,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
             let args = serde_json::to_string(&LaunchArgs {
                 platform: "Deca".to_string(),
+                platform_token: None,
+                steam_id: None,
                 guid: base64::encode(username),
                 token: base64::encode(account.access_token),
                 token_timestamp: base64::encode(account.access_token_timestamp),

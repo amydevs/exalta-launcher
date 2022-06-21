@@ -27,6 +27,7 @@ pub async fn request_credentials(
         .send()
         .await?;
     let resp_text = steam_creds_resp.text().await?;
+    println!("{}", resp_text);
     Ok(quick_xml::de::from_str::<Credentials>(&resp_text).map_err(|e| AuthError(e.to_string()))?)
 }
 

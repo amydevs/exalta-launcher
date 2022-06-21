@@ -54,7 +54,7 @@ impl ExaltaLauncher {
                             token_timestamp: base64::encode(account.access_token_timestamp.clone()),
                             token_expiration: base64::encode(account.access_token_expiration.clone()),
                             env: 4,
-                            server_name: None,
+                            server_name: String::new(),
                         })?
                     }
                     else {
@@ -67,7 +67,7 @@ impl ExaltaLauncher {
                             token_timestamp: base64::encode(account.access_token_timestamp.clone()),
                             token_expiration: base64::encode(account.access_token_expiration.clone()),
                             env: 4,
-                            server_name: None,
+                            server_name: String::new(),
                         })?
                     }.replace(",\"serverName\":null", ",\"serverName\":");
                     println!("{}", args);

@@ -35,5 +35,10 @@ name = "exalta"
 path = "src/main.rs"
 
 [[bin]]
+name = "exalta-steam"
+required-features = ["steam"]
+path = "src/main.rs"
+
+[[bin]]
 name = "exalta-cli"
 path = "src/cli.rs"

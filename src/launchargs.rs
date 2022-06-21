@@ -11,5 +11,5 @@ pub struct LaunchArgs {
     pub token_timestamp: String,
     pub token_expiration: String,
     pub env: i32,
-    pub server_name: Option<String>,
+    pub server_name: String,
 }

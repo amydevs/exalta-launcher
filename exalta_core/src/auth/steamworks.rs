@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{coll_to_owned, DEFAULT_PARAMS, CLIENT, BASE_URL};
+use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 
 use super::err::AuthError;
 
@@ -13,7 +13,9 @@ pub fn encode_hex(bytes: &[u8]) -> String {
     s
 }
 
-pub async fn request_credentials(session_token: &str) -> Result<Credentials, Box<dyn std::error::Error>> {
+pub async fn request_credentials(
+    session_token: &str,
+) -> Result<Credentials, Box<dyn std::error::Error>> {
     let sessionticketparams = [
         coll_to_owned(vec![("sessionticket", session_token)]),
         DEFAULT_PARAMS.read()?.to_vec(),
@@ -25,8 +27,7 @@ pub async fn request_credentials(session_token: &str) -> Result<Credentials, Box
         .send()
         .await?;
     let resp_text = steam_creds_resp.text().await?;
-    Ok(quick_xml::de::from_str::<Credentials>(&resp_text)
-        .map_err(|e| AuthError(e.to_string()))?)
+    Ok(quick_xml::de::from_str::<Credentials>(&resp_text).map_err(|e| AuthError(e.to_string()))?)
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

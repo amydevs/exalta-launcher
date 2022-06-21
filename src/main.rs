@@ -35,7 +35,10 @@ struct ResultTimeWrapper {
 }
 impl Default for ResultTimeWrapper {
     fn default() -> Self {
-        Self { result: Ok(()), time: std::time::Instant::now() }
+        Self {
+            result: Ok(()),
+            time: std::time::Instant::now(),
+        }
     }
 }
 
@@ -185,7 +188,11 @@ impl ExaltaLauncher {
             }
 
             println!("END");
-            let credentials = self.runtime.block_on(exalta_core::auth::steamworks::request_credentials(&encode_hex(&ticket)))?;
+            let credentials =
+                self.runtime
+                    .block_on(exalta_core::auth::steamworks::request_credentials(
+                        &exalta_core::auth::steamworks::encode_hex(&ticket),
+                    ))?;
             self.account = Some(self.runtime.block_on(request_account(
                 &AuthInfo::default().steamworks_credentials(credentials),
             ))?);
@@ -222,13 +229,4 @@ impl ExaltaLauncher {
 
         Ok(())
     }
-}
-
-fn encode_hex(bytes: &[u8]) -> String {
-    use std::fmt::Write;
-    let mut s = String::with_capacity(bytes.len() * 2);
-    for &b in bytes {
-        write!(&mut s, "{:02x}", b).unwrap();
-    }
-    s
 }

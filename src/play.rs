@@ -44,16 +44,32 @@ impl ExaltaLauncher {
             if let Some(document_dir) = user_dirs.document_dir() {
                 if let Some(account) = &self.account {
                     let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
-                    let args = serde_json::to_string(&LaunchArgs {
-                        platform: "Deca".to_string(),
-                        guid: base64::encode(&self.auth.guid),
-                        token: base64::encode(account.access_token.clone()),
-                        token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                        token_expiration: base64::encode(account.access_token_expiration.clone()),
-                        env: 4,
-                        server_name: None,
-                    })?
-                    .replace(",\"serverName\":null", ",\"serverName\":");
+                    let args = if let Some(steam_creds) = &self.steam_credentials {
+                        serde_json::to_string(&LaunchArgs {
+                            platform: "Steam".to_string(),
+                            guid: base64::encode(&self.auth.guid),
+                            platform_token: Some(base64::encode(&steam_creds.platform_token)),
+                            steam_id: Some(base64::encode(&self.auth.guid.replace("steamworks:", ""))),
+                            token: base64::encode(account.access_token.clone()),
+                            token_timestamp: base64::encode(account.access_token_timestamp.clone()),
+                            token_expiration: base64::encode(account.access_token_expiration.clone()),
+                            env: 4,
+                            server_name: None,
+                        })?
+                    }
+                    else {
+                        serde_json::to_string(&LaunchArgs {
+                            platform: "Deca".to_string(),
+                            guid: base64::encode(&self.auth.guid),
+                            platform_token: None,
+                            steam_id: None,
+                            token: base64::encode(account.access_token.clone()),
+                            token_timestamp: base64::encode(account.access_token_timestamp.clone()),
+                            token_expiration: base64::encode(account.access_token_expiration.clone()),
+                            env: 4,
+                            server_name: None,
+                        })?
+                    }.replace(",\"serverName\":null", ",\"serverName\":");
                     println!("{}", args);
                     Command::new(execpath.to_str().unwrap())
                         .args(&[format!("data:{}", args)])

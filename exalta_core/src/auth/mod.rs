@@ -58,7 +58,10 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
             .form(&sessionticketparams)
             .send()
             .await?;
-        let steam_creds = steam_creds_resp.json::<steamworks::Credentials>().await?;
+        let resp_text = steam_creds_resp.text().await?;
+        println!("{}", resp_text);
+        let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(resp_text.as_str())
+        .map_err(|e| AuthError(e.to_string()))?;
         Ok([
             coll_to_owned(vec![
                 ("guid", &steam_creds.guid),

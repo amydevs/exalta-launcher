@@ -2,7 +2,7 @@
 
 use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
-use ::steamworks::{AuthTicket, AuthSessionTicketResponse, Callback};
+use ::steamworks::{AuthTicket, AuthSessionTicketResponse, Callback, ValidateAuthTicketResponse};
 use tokio::runtime::Runtime;
 
 mod login;
@@ -39,7 +39,7 @@ struct ExaltaLauncher {
     auth_save: bool,
     account: Option<Account>,
 
-    steam_client: Option<::steamworks::Client>,
+    steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -96,7 +96,7 @@ impl Default for ExaltaLauncher {
             account: None,
             steam_client:
                 if std::env::args().collect::<Vec<String>>().into_iter().find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s" ).is_some() {
-                    ::steamworks::Client::init_app(200210).map(|x| x.0).ok()
+                    ::steamworks::Client::init_app(200210).ok()
                 }
                 else {
                   None  
@@ -107,7 +107,7 @@ impl Default for ExaltaLauncher {
         };
 
         if let Some(client) = &self_inst.steam_client {
-            exalta_core::set_steamid_game_net_play_platform(&client.user().steam_id().raw().to_string());
+            exalta_core::set_steamid_game_net_play_platform(&client.0.user().steam_id().raw().to_string());
             self_inst.login().unwrap();
         }
         else {
@@ -162,15 +162,36 @@ impl eframe::App for ExaltaLauncher {
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(client) = &self.steam_client {
-            self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
-            let (_session_ticket, auth_vec) = client.user().authentication_session_ticket();
-            let ticket = encode_hex(&auth_vec);
-            
-            println!("{}", ticket);
+            self.auth.guid = format!("steamworks:{}", client.0.user().steam_id().raw().to_string());
+            let user = client.0.user();
 
+            let _cb = client.0.register_callback(|v: AuthSessionTicketResponse| { 
+            });
+            let _cb = client.0.register_callback(|v: ValidateAuthTicketResponse| println!("{:?}", v));
+
+            let id = user.steam_id();
+            let (auth, ticket) = user.authentication_session_ticket();
+
+            println!("{:?}", user.begin_authentication_session(id, &ticket));
+
+            for _ in 0..20 {
+                client.1.run_callbacks();
+                ::std::thread::sleep(::std::time::Duration::from_millis(50));
+            }
+
+            println!("END");
+            println!("{:?}", encode_hex(&ticket));
             self.account = Some(self.runtime.block_on(
-                request_account(&AuthInfo::default().session_token(&ticket))
+                request_account(&AuthInfo::default().session_token(&encode_hex(&ticket)))
             )?);
+
+            user.cancel_authentication_ticket(auth);
+
+            for _ in 0..20 {
+                client.1.run_callbacks();
+                ::std::thread::sleep(::std::time::Duration::from_millis(50));
+            }
+            
         }
         else {
             if !self.auth_save {

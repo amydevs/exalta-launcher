@@ -59,8 +59,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
             .send()
             .await?;
         let resp_text = steam_creds_resp.text().await?;
-        println!("{}", resp_text);
-        let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(resp_text.as_str())
+        let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(&resp_text)
         .map_err(|e| AuthError(e.to_string()))?;
         Ok([
             coll_to_owned(vec![
@@ -77,17 +76,19 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
     };
 
     let resp = CLIENT
-            .post(BASE_URL.join("account/verify")?)
-            .form(&post_params?)
-            .send()
-            .await?;
+        .post(BASE_URL.join("account/verify")?)
+        .form(&post_params?)
+        .send()
+        .await?;
+        
+    let resp_text = resp.text().await?;
+    println!("{}", resp_text);
 
-        let resp_text = resp.text().await?;
-        if resp_text.to_lowercase().starts_with("<error>") {
-            return Err(AuthError(String::from("Credentials Incorrect")).into());
-        }
-        Ok(quick_xml::de::from_str::<Account>(resp_text.as_str())
-            .map_err(|e| AuthError(e.to_string()))?)
+    if resp_text.to_lowercase().starts_with("<error>") {
+        return Err(AuthError(String::from("Credentials Incorrect")).into());
+    }
+    Ok(quick_xml::de::from_str::<Account>(resp_text.as_str())
+        .map_err(|e| AuthError(e.to_string()))?)
 }
 
 pub async fn verify_access_token(access_token: &str) -> Result<bool, Box<dyn std::error::Error>> {

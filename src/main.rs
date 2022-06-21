@@ -100,9 +100,11 @@ impl Default for ExaltaLauncher {
             },
             auth_save: true,
             account: None,
+
             #[cfg(feature = "steam")]
             steam_client: ::steamworks::Client::init_app(200210).ok(),
             steam_credentials: None,
+            
             entry,
             runtime,
             run_res,
@@ -117,16 +119,15 @@ impl Default for ExaltaLauncher {
             self_inst.run_res.result = self_inst.login();
         } 
 
-        if !cfg!(feature = "steam") {
-            if let Ok(val) = self_inst.entry.get_password() {
-                if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
-                    self_inst.auth = foundauth;
-    
-                    self_inst.run_res = ResultTimeWrapper::default();
-                    self_inst.run_res.result = self_inst.login();
-                };
+        #[cfg(not(feature = "steam"))]
+        if let Ok(val) = self_inst.entry.get_password() {
+            if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
+                self_inst.auth = foundauth;
+
+                self_inst.run_res = ResultTimeWrapper::default();
+                self_inst.run_res.result = self_inst.login();
             };
-        }
+        };
 
         self_inst
     }

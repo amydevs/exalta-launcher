@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 token_timestamp: base64::encode(account.access_token_timestamp),
                 token_expiration: base64::encode(account.access_token_expiration),
                 env: 4,
-                server_name: None,
+                server_name: String::new(),
             })?
             .replace(",\"serverName\":null", ",\"serverName\":");
             println!("{}", args);

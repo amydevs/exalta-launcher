@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::sync::{Mutex, RwLock};
+use std::sync::RwLock;
 
 use reqwest::{
     header::{HeaderMap, HeaderValue},

@@ -1,5 +1,3 @@
-use reqwest::{Client, Url};
-
 use crate::{coll_to_owned, BASE_URL, CLIENT, CLIENT_TOKEN, DEFAULT_PARAMS};
 
 use self::account::Account;

@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use ::steamworks::{AuthSessionTicketResponse, AuthTicket, Callback, ValidateAuthTicketResponse};
 use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
@@ -168,7 +167,7 @@ impl ExaltaLauncher {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let user = client.user();
 
-            let _cb = client.register_callback(|v: AuthSessionTicketResponse| {
+            let _cb = client.register_callback(|v: ::steamworks::AuthSessionTicketResponse| {
                 println!("Got Response from Steam: {:?}", v.result)
             });
 

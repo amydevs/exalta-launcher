@@ -66,4 +66,10 @@ mod tests {
         exalta_core::set_steamid_game_net_play_platform("sdsdkj");
         println!("{:?}", exalta_core::DEFAULT_PARAMS.read().unwrap());
     }
+
+    #[test] 
+    fn test_serde() {
+        let string = "<Account></Account>";
+        quick_xml::de::from_str::<Account>(string).unwrap();
+    }
 }

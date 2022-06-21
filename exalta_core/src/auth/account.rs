@@ -198,20 +198,17 @@ impl Default for SecurityQuestionsKeys {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct Stats {
-    #[serde(default)]
     #[serde(rename = "ClassStats")]
     pub class_stats: Vec<ClassStat>,
 
-    #[serde(default)]
     #[serde(rename = "BestCharFame")]
     pub best_char_fame: String,
 
-    #[serde(default)]
     #[serde(rename = "TotalFame")]
     pub total_fame: String,
 
-    #[serde(default)]
     #[serde(rename = "Fame")]
     pub fame: String,
 }

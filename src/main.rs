@@ -47,6 +47,7 @@ struct ExaltaLauncher {
     auth_save: bool,
     account: Option<Account>,
 
+    #[cfg(feature = "steam")]
     steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
     steam_credentials: Option<steamworks::Credentials>,
 
@@ -101,33 +102,28 @@ impl Default for ExaltaLauncher {
             },
             auth_save: true,
             account: None,
-            steam_client: if std::env::args()
-                .collect::<Vec<String>>()
-                .into_iter()
-                .find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s")
-                .is_some()
-            {
-                ::steamworks::Client::init_app(200210).ok()
-            } else {
-                None
-            },
+            #[cfg(feature = "steam")]
+            steam_client: ::steamworks::Client::init_app(200210).ok(),
             steam_credentials: None,
             entry,
             runtime,
             run_res,
         };
 
+        #[cfg(feature = "steam")]
         if let Some(client) = &self_inst.steam_client {
             exalta_core::set_steamid_game_net_play_platform(
                 &client.0.user().steam_id().raw().to_string(),
             );
             self_inst.run_res = ResultTimeWrapper::default();
             self_inst.run_res.result = self_inst.login();
-        } else {
+        } 
+
+        if !cfg!(feature = "steam") {
             if let Ok(val) = self_inst.entry.get_password() {
                 if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
                     self_inst.auth = foundauth;
-
+    
                     self_inst.run_res = ResultTimeWrapper::default();
                     self_inst.run_res.result = self_inst.login();
                 };
@@ -175,6 +171,7 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(feature = "steam")]
         if let Some((client, single)) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let user = client.user();
@@ -202,7 +199,8 @@ impl ExaltaLauncher {
             ))?);
 
             user.cancel_authentication_ticket(auth);
-        } else {
+        } 
+        if !cfg!(feature = "steam") {
             if !self.auth_save {
                 self.entry.delete_password().ok();
             }

@@ -1,8 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
+use ::steamworks::{AuthSessionTicketResponse, AuthTicket, Callback, ValidateAuthTicketResponse};
 use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
-use ::steamworks::{AuthTicket, AuthSessionTicketResponse, Callback, ValidateAuthTicketResponse};
 use tokio::runtime::Runtime;
 
 mod login;
@@ -94,23 +94,27 @@ impl Default for ExaltaLauncher {
             },
             auth_save: true,
             account: None,
-            steam_client:
-                if std::env::args().collect::<Vec<String>>().into_iter().find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s" ).is_some() {
-                    ::steamworks::Client::init_app(200210).ok()
-                }
-                else {
-                  None  
-                },
+            steam_client: if std::env::args()
+                .collect::<Vec<String>>()
+                .into_iter()
+                .find(|x| x.to_lowercase() == "--steam" || x.to_lowercase() == "-s")
+                .is_some()
+            {
+                ::steamworks::Client::init_app(200210).ok()
+            } else {
+                None
+            },
             entry,
             runtime,
             run_res,
         };
 
         if let Some(client) = &self_inst.steam_client {
-            exalta_core::set_steamid_game_net_play_platform(&client.0.user().steam_id().raw().to_string());
+            exalta_core::set_steamid_game_net_play_platform(
+                &client.0.user().steam_id().raw().to_string(),
+            );
             self_inst.login().unwrap();
-        }
-        else {
+        } else {
             if let Some(val) = self_inst.entry.get_password().ok() {
                 if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
                     self_inst.auth = foundauth;
@@ -118,7 +122,6 @@ impl Default for ExaltaLauncher {
                 };
             };
         }
-        
 
         self_inst
     }
@@ -165,7 +168,7 @@ impl ExaltaLauncher {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let user = client.user();
 
-            let _cb = client.register_callback(|v: AuthSessionTicketResponse| { 
+            let _cb = client.register_callback(|v: AuthSessionTicketResponse| {
                 println!("Got Response from Steam: {:?}", v.result)
             });
 
@@ -177,13 +180,12 @@ impl ExaltaLauncher {
             }
 
             println!("END");
-            self.account = Some(self.runtime.block_on(
-                request_account(&AuthInfo::default().session_token(&encode_hex(&ticket)))
-            )?);
+            self.account = Some(self.runtime.block_on(request_account(
+                &AuthInfo::default().session_token(&encode_hex(&ticket)),
+            ))?);
 
             user.cancel_authentication_ticket(auth);
-        }
-        else {
+        } else {
             if !self.auth_save {
                 self.entry.delete_password().ok();
             }
@@ -191,24 +193,27 @@ impl ExaltaLauncher {
                 &AuthInfo::default()
                     .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
             ))?;
-    
+
             self.account = Some(acc);
-    
+
             if self.auth_save {
                 if let Ok(json) = serde_json::to_string(&self.auth) {
                     self.entry.set_password(json.as_str()).ok();
                 }
             }
-    
         }
         if let Some(account) = &self.account {
             let access_token = account.access_token.clone();
             self.runtime.spawn(async move {
-                exalta_core::misc::init(Some("rotmg"), Some(&access_token)).await.ok();
-                exalta_core::misc::init(None, Some(&access_token)).await.ok();
+                exalta_core::misc::init(Some("rotmg"), Some(&access_token))
+                    .await
+                    .ok();
+                exalta_core::misc::init(None, Some(&access_token))
+                    .await
+                    .ok();
             });
         }
-    
+
         Ok(())
     }
 }

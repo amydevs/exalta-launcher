@@ -238,4 +238,3 @@ pub struct ClassStat {
     #[serde(rename = "objectType")]
     pub object_type: String,
 }
-

@@ -6,8 +6,8 @@ use self::account::Account;
 use self::err::AuthError;
 
 pub mod account;
-pub mod steamworks;
 pub mod err;
+pub mod steamworks;
 
 pub struct AuthInfo {
     pub username: String,
@@ -36,51 +36,50 @@ impl AuthInfo {
 }
 pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn std::error::Error>> {
     let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
-    let post_params: Result<Vec<(String, String)>, Box<dyn std::error::Error>> = if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
-        Ok([
-            tokenparams,
-            DEFAULT_PARAMS.read()?.to_vec(),
-            coll_to_owned(vec![
-                ("guid", &auth_info.username),
-                ("password", &auth_info.password),
-            ]),
-        ]
-        .concat())
-    } else if !auth_info.session_token.is_empty() {
-        let sessionticketparams = [
-            coll_to_owned(vec![
-                ("sessionticket", &auth_info.session_token),
-            ]),
-            DEFAULT_PARAMS.read()?.to_vec(),
-        ].concat();
-        let steam_creds_resp = CLIENT
-            .post(BASE_URL.join("steamworks/getcredentials")?)
-            .form(&sessionticketparams)
-            .send()
-            .await?;
-        let resp_text = steam_creds_resp.text().await?;
-        let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(&resp_text)
-        .map_err(|e| AuthError(e.to_string()))?;
-        Ok([
-            coll_to_owned(vec![
-                ("guid", &steam_creds.guid),
-                ("secret", &steam_creds.secret),
-            ]),
-            tokenparams,
-            DEFAULT_PARAMS.read()?.to_vec(),
-        ]
-        .concat())
-    }
-    else {
-        return Err(AuthError(String::from("No Credentials")).into())
-    };
+    let post_params: Result<Vec<(String, String)>, Box<dyn std::error::Error>> =
+        if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
+            Ok([
+                tokenparams,
+                DEFAULT_PARAMS.read()?.to_vec(),
+                coll_to_owned(vec![
+                    ("guid", &auth_info.username),
+                    ("password", &auth_info.password),
+                ]),
+            ]
+            .concat())
+        } else if !auth_info.session_token.is_empty() {
+            let sessionticketparams = [
+                coll_to_owned(vec![("sessionticket", &auth_info.session_token)]),
+                DEFAULT_PARAMS.read()?.to_vec(),
+            ]
+            .concat();
+            let steam_creds_resp = CLIENT
+                .post(BASE_URL.join("steamworks/getcredentials")?)
+                .form(&sessionticketparams)
+                .send()
+                .await?;
+            let resp_text = steam_creds_resp.text().await?;
+            let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(&resp_text)
+                .map_err(|e| AuthError(e.to_string()))?;
+            Ok([
+                coll_to_owned(vec![
+                    ("guid", &steam_creds.guid),
+                    ("secret", &steam_creds.secret),
+                ]),
+                tokenparams,
+                DEFAULT_PARAMS.read()?.to_vec(),
+            ]
+            .concat())
+        } else {
+            return Err(AuthError(String::from("No Credentials")).into());
+        };
 
     let resp = CLIENT
         .post(BASE_URL.join("account/verify")?)
         .form(&post_params?)
         .send()
         .await?;
-        
+
     let resp_text = resp.text().await?;
 
     if resp_text.to_lowercase().starts_with("<error>") {

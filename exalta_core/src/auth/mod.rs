@@ -82,7 +82,6 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
         .await?;
         
     let resp_text = resp.text().await?;
-    println!("{}", resp_text);
 
     if resp_text.to_lowercase().starts_with("<error>") {
         return Err(AuthError(String::from("Credentials Incorrect")).into());

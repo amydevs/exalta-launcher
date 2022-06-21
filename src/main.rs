@@ -161,34 +161,27 @@ impl eframe::App for ExaltaLauncher {
 }
 impl ExaltaLauncher {
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(client) = &self.steam_client {
-            self.auth.guid = format!("steamworks:{}", client.0.user().steam_id().raw().to_string());
-            let user = client.0.user();
+        if let Some((client, single)) = &self.steam_client {
+            self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
+            let user = client.user();
 
-            let _cb = client.0.register_callback(|v: AuthSessionTicketResponse| { 
-                println!("{:?}", v.result)
+            let _cb = client.register_callback(|v: AuthSessionTicketResponse| { 
+                println!("Got Response from Steam: {:?}", v.result)
             });
 
             let (auth, ticket) = user.authentication_session_ticket();
 
             for _ in 0..20 {
-                client.1.run_callbacks();
+                single.run_callbacks();
                 ::std::thread::sleep(::std::time::Duration::from_millis(50));
             }
 
             println!("END");
-            println!("{:?}", encode_hex(&ticket));
             self.account = Some(self.runtime.block_on(
                 request_account(&AuthInfo::default().session_token(&encode_hex(&ticket)))
             )?);
 
             user.cancel_authentication_ticket(auth);
-
-            for _ in 0..20 {
-                client.1.run_callbacks();
-                ::std::thread::sleep(::std::time::Duration::from_millis(50));
-            }
-            
         }
         else {
             if !self.auth_save {

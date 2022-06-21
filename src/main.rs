@@ -166,13 +166,10 @@ impl ExaltaLauncher {
             let user = client.0.user();
 
             let _cb = client.0.register_callback(|v: AuthSessionTicketResponse| { 
+                println!("{:?}", v.result)
             });
-            let _cb = client.0.register_callback(|v: ValidateAuthTicketResponse| println!("{:?}", v));
 
-            let id = user.steam_id();
             let (auth, ticket) = user.authentication_session_ticket();
-
-            println!("{:?}", user.begin_authentication_session(id, &ticket));
 
             for _ in 0..20 {
                 client.1.run_callbacks();

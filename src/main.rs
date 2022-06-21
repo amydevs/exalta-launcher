@@ -201,7 +201,14 @@ impl ExaltaLauncher {
             }
     
         }
-        
+        if let Some(account) = &self.account {
+            let access_token = account.access_token.clone();
+            self.runtime.spawn(async move {
+                exalta_core::misc::init(Some("rotmg"), Some(&access_token)).await.ok();
+                exalta_core::misc::init(None, Some(&access_token)).await.ok();
+            });
+        }
+    
         Ok(())
     }
 }

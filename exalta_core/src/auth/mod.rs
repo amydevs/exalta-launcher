@@ -2,6 +2,7 @@ use crate::{coll_to_owned, BASE_URL, CLIENT, CLIENT_TOKEN, DEFAULT_PARAMS};
 
 use self::account::Account;
 use self::err::AuthError;
+use self::steamworks::Credentials;
 
 pub mod account;
 pub mod err;
@@ -10,14 +11,14 @@ pub mod steamworks;
 pub struct AuthInfo {
     pub username: String,
     pub password: String,
-    pub session_token: String,
+    pub steamworks_credentials: Option<Credentials>,
 }
 impl Default for AuthInfo {
     fn default() -> Self {
         Self {
             username: Default::default(),
             password: Default::default(),
-            session_token: Default::default(),
+            steamworks_credentials: None,
         }
     }
 }
@@ -27,8 +28,8 @@ impl AuthInfo {
         self.password = password.to_string();
         self
     }
-    pub fn session_token(mut self, session_token: &str) -> Self {
-        self.session_token = session_token.to_string();
+    pub fn steamworks_credentials(mut self, steamworks_credentials: Credentials) -> Self {
+        self.steamworks_credentials = Some(steamworks_credentials);
         self
     }
 }
@@ -45,20 +46,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
                 ]),
             ]
             .concat())
-        } else if !auth_info.session_token.is_empty() {
-            let sessionticketparams = [
-                coll_to_owned(vec![("sessionticket", &auth_info.session_token)]),
-                DEFAULT_PARAMS.read()?.to_vec(),
-            ]
-            .concat();
-            let steam_creds_resp = CLIENT
-                .post(BASE_URL.join("steamworks/getcredentials")?)
-                .form(&sessionticketparams)
-                .send()
-                .await?;
-            let resp_text = steam_creds_resp.text().await?;
-            let steam_creds = quick_xml::de::from_str::<steamworks::Credentials>(&resp_text)
-                .map_err(|e| AuthError(e.to_string()))?;
+        } else if let Some(steam_creds) = &auth_info.steamworks_credentials {
             Ok([
                 coll_to_owned(vec![
                     ("guid", &steam_creds.guid),

@@ -185,8 +185,9 @@ impl ExaltaLauncher {
             }
 
             println!("END");
+            let credentials = self.runtime.block_on(exalta_core::auth::steamworks::request_credentials(&encode_hex(&ticket)))?;
             self.account = Some(self.runtime.block_on(request_account(
-                &AuthInfo::default().session_token(&encode_hex(&ticket)),
+                &AuthInfo::default().steamworks_credentials(credentials),
             ))?);
 
             user.cancel_authentication_ticket(auth);

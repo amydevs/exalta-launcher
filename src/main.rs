@@ -168,8 +168,8 @@ impl eframe::App for ExaltaLauncher {
     }
 }
 impl ExaltaLauncher {
+    #[cfg(feature = "steam")]
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        #[cfg(feature = "steam")]
         if let Some((client, single)) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let user = client.user();
@@ -198,23 +198,30 @@ impl ExaltaLauncher {
 
             user.cancel_authentication_ticket(auth);
         } 
-        if !cfg!(feature = "steam") {
-            if !self.auth_save {
-                self.entry.delete_password().ok();
-            }
-            let acc = self.runtime.block_on(request_account(
-                &AuthInfo::default()
-                    .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
-            ))?;
+        self.run_inits();
+        Ok(())
+    }
+    #[cfg(not(feature = "steam"))]
+    fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.auth_save {
+            self.entry.delete_password().ok();
+        }
+        let acc = self.runtime.block_on(request_account(
+            &AuthInfo::default()
+                .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
+        ))?;
 
-            self.account = Some(acc);
+        self.account = Some(acc);
 
-            if self.auth_save {
-                if let Ok(json) = serde_json::to_string(&self.auth) {
-                    self.entry.set_password(json.as_str()).ok();
-                }
+        if self.auth_save {
+            if let Ok(json) = serde_json::to_string(&self.auth) {
+                self.entry.set_password(json.as_str()).ok();
             }
         }
+        self.run_inits();
+        Ok(())
+    }
+    fn run_inits(&mut self) {
         if let Some(account) = &self.account {
             let access_token = account.access_token.clone();
             self.runtime.spawn(async move {
@@ -226,7 +233,5 @@ impl ExaltaLauncher {
                     .ok();
             });
         }
-
-        Ok(())
     }
 }

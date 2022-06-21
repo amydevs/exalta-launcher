@@ -1,3 +1,5 @@
 {
-    "rust-analyzer.checkOnSave.features": ["steam"]
+    "rust-analyzer.cargo.features": [
+        
+    ]
 }

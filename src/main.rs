@@ -73,6 +73,7 @@ impl Default for ExaltaLauncher {
                 let buildhash = runtime
                     .block_on(exalta_core::misc::init(None, None))?
                     .build_hash;
+                println!("Old: {} == New: {}", buildid, buildhash);
                 if buildid != buildhash {
                     return Err(Box::new(UpdateError(String::from(
                         "An update for the game is available, please run the official launcher to update the game first."

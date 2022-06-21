@@ -1,5 +1,3 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-
 use exalta_core::auth::{account::Account, *};
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;

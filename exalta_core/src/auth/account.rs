@@ -110,15 +110,12 @@ pub struct Account {
     #[serde(rename = "Guild")]
     pub guild: Option<Guild>,
 
-    #[serde(default)]
     #[serde(rename = "AccessToken")]
     pub access_token: String,
 
-    #[serde(default)]
     #[serde(rename = "AccessTokenTimestamp")]
     pub access_token_timestamp: String,
 
-    #[serde(default)]
     #[serde(rename = "AccessTokenExpiration")]
     pub access_token_expiration: String,
 }

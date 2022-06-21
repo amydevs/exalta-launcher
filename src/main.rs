@@ -33,6 +33,12 @@ struct ResultTimeWrapper {
     result: Result<(), Box<dyn std::error::Error>>,
     time: std::time::Instant,
 }
+impl Default for ResultTimeWrapper {
+    fn default() -> Self {
+        Self { result: Ok(()), time: std::time::Instant::now() }
+    }
+}
+
 struct ExaltaLauncher {
     auth: LauncherAuth,
     auth_save: bool,
@@ -50,10 +56,7 @@ impl Default for ExaltaLauncher {
     fn default() -> Self {
         let entry = keyring::Entry::new(&"exalt", &"jsondata");
 
-        let mut run_res = ResultTimeWrapper {
-            result: Ok(()),
-            time: std::time::Instant::now(),
-        };
+        let mut run_res = ResultTimeWrapper::default();
 
         let runtime = Runtime::new().unwrap();
 
@@ -112,12 +115,15 @@ impl Default for ExaltaLauncher {
             exalta_core::set_steamid_game_net_play_platform(
                 &client.0.user().steam_id().raw().to_string(),
             );
-            self_inst.login().unwrap();
+            self_inst.run_res = ResultTimeWrapper::default();
+            self_inst.run_res.result = self_inst.login();
         } else {
-            if let Some(val) = self_inst.entry.get_password().ok() {
-                if let Some(foundauth) = serde_json::from_str::<LauncherAuth>(&val).ok() {
+            if let Ok(val) = self_inst.entry.get_password() {
+                if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
                     self_inst.auth = foundauth;
-                    self_inst.login().ok();
+
+                    self_inst.run_res = ResultTimeWrapper::default();
+                    self_inst.run_res.result = self_inst.login();
                 };
             };
         }

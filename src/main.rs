@@ -48,6 +48,7 @@ struct ExaltaLauncher {
     account: Option<Account>,
 
     steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
+    steam_credentials: Option<steamworks::Credentials>,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -109,6 +110,7 @@ impl Default for ExaltaLauncher {
             } else {
                 None
             },
+            steam_credentials: None,
             entry,
             runtime,
             run_res,
@@ -193,6 +195,7 @@ impl ExaltaLauncher {
                     .block_on(exalta_core::auth::steamworks::request_credentials(
                         &exalta_core::auth::steamworks::encode_hex(&ticket),
                     ))?;
+            self.steam_credentials = Some(credentials.clone());
             self.account = Some(self.runtime.block_on(request_account(
                 &AuthInfo::default().steamworks_credentials(credentials),
             ))?);

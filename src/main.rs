@@ -12,7 +12,7 @@ mod config;
 #[cfg(windows)]
 mod registries;
 
-use eframe::egui::{self, Layout};
+use eframe::{egui::{self, Layout}, emath::Pos2};
 
 fn main() {
     let options = eframe::NativeOptions::default();
@@ -153,11 +153,16 @@ impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(2.0);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
-            use egui::{Rect, Vec2, Button, RichText,};
+            use egui::{Rect, Button, RichText, Vec2};
             ui.heading("Exalta Launcher");
             let rect = ui.max_rect();
+
+            let right_top = rect.right_top() + Vec2 {
+                x: -4.5,
+                y: 1.
+            };
             let settings_resp = ui.put(
-                Rect::from_points(&[rect.right_top()]),
+                Rect::from_points(&[right_top]),
                 Button::new(RichText::new("\u{2699}")).frame(false),
             );
             if settings_resp.clicked() {

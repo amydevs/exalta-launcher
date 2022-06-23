@@ -38,10 +38,11 @@ pub async fn download_files_from_checksums(
     build_hash: &str,
     platform: &str,
     dir: &PathBuf,
-    checksums_files: &Vec<File>
+    checksums_files: &Vec<File>,
+    mut progress: Option<&mut f32>
 ) -> Result<(), Box<dyn std::error::Error>> {
     
-    for checksum in checksums_files {
+    for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;
         for n in 0..max_retries+1 {
             if download_file_and_check(
@@ -55,6 +56,9 @@ pub async fn download_files_from_checksums(
             else if n == max_retries {
                 Err(format!("Download Failed!"))?;
             }
+        }
+        if let Some(progress) = progress.as_deref_mut() {
+            *progress = i as f32 / checksums_files.len() as f32
         }
     }
     Ok(())

@@ -38,10 +38,10 @@ pub async fn download_files_from_checksums(
     build_hash: &str,
     platform: &str,
     dir: &PathBuf,
-    checksums: ChecksumFiles
+    checksums_files: &Vec<File>
 ) -> Result<(), Box<dyn std::error::Error>> {
     
-    for checksum in checksums.files {
+    for checksum in checksums_files {
         let max_retries = 2;
         for n in 0..max_retries+1 {
             if download_file_and_check(

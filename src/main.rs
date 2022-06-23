@@ -68,7 +68,7 @@ impl Default for ExaltaLauncher {
                 "An update for the game is available, please run the official launcher to update the game first."
             )));
 
-            let update_checker = || -> Result<(), Box<dyn std::error::Error>> {
+            let update_runner = || -> Result<(), Box<dyn std::error::Error>> {
                 #[cfg(windows)]
                 let registry_build_hash = crate::registries::get_build_id()?;
                 #[cfg(not(windows))]
@@ -114,7 +114,7 @@ impl Default for ExaltaLauncher {
             };
 
             run_res = ResultTimeWrapper::default();
-            run_res.result = update_checker().map_err(|x| {
+            run_res.result = update_runner().map_err(|x| {
                 if x.is::<UpdateError>() {
                     x
                 } else {
@@ -147,8 +147,11 @@ impl Default for ExaltaLauncher {
             exalta_core::set_steamid_game_net_play_platform(
                 &client.0.user().steam_id().raw().to_string(),
             );
-            self_inst.run_res = ResultTimeWrapper::default();
-            self_inst.run_res.result = self_inst.login();
+            let res = self_inst.login();
+            if self_inst.run_res.result.is_ok() {
+                self_inst.run_res = ResultTimeWrapper::default();
+                self_inst.run_res.result = res;
+            }
         }
 
         #[cfg(not(feature = "steam"))]
@@ -156,8 +159,11 @@ impl Default for ExaltaLauncher {
             if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
                 self_inst.auth = foundauth;
 
-                self_inst.run_res = ResultTimeWrapper::default();
-                self_inst.run_res.result = self_inst.login();
+                let res = self_inst.login();
+                if self_inst.run_res.result.is_ok() {
+                    self_inst.run_res = ResultTimeWrapper::default();
+                    self_inst.run_res.result = res;
+                }
             };
         };
 

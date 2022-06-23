@@ -7,13 +7,15 @@ mod gui;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub dark: bool
+    pub dark: bool,
+    pub save_login: bool,
 }
 impl Default for AppConfig {
     fn default() -> Self {
         Self { 
-            dark: false
-         }
+            dark: false,
+            save_login: true
+        }
     }
 }
 

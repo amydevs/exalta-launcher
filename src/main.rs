@@ -52,7 +52,6 @@ impl Default for ResultTimeWrapper {
 
 struct ExaltaLauncher {
     auth: LauncherAuth,
-    auth_save: bool,
     account: Option<Account>,
 
     #[cfg(feature = "steam")]
@@ -111,7 +110,6 @@ impl Default for ExaltaLauncher {
                 guid: String::new(),
                 password: String::new(),
             },
-            auth_save: true,
             account: None,
 
             #[cfg(feature = "steam")]
@@ -251,7 +249,7 @@ impl ExaltaLauncher {
     }
     #[cfg(not(feature = "steam"))]
     fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if !self.auth_save {
+        if !self.config.save_login {
             self.entry.delete_password().ok();
         }
         let acc = self.runtime.block_on(request_account(
@@ -262,7 +260,7 @@ impl ExaltaLauncher {
         self.account = Some(acc);
         self.mutate_router("play");
 
-        if self.auth_save {
+        if self.config.save_login {
             if let Ok(json) = serde_json::to_string(&self.auth) {
                 self.entry.set_password(json.as_str()).ok();
             }

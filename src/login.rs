@@ -25,9 +25,13 @@ impl ExaltaLauncher {
             })
             .inner?;
             ui.add_space(10.);
-            ui.vertical_centered_justified(|ui| {
-                ui.checkbox(&mut self.auth_save, "Save Login");
-            });
+            ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
+                if ui.checkbox(&mut self.config.save_login, "Save Login").changed() {
+                    self.config.save()?;
+                }
+                Ok(())
+            }).inner?;
+
             ui.add_space(10.);
             if ui.button("Login").clicked() {
                 self.login()?;

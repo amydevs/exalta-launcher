@@ -12,7 +12,7 @@ mod config;
 #[cfg(windows)]
 mod registries;
 
-use eframe::egui;
+use eframe::egui::{self, Layout};
 
 fn main() {
     let options = eframe::NativeOptions::default();
@@ -64,6 +64,7 @@ struct ExaltaLauncher {
 
     run_res: ResultTimeWrapper,
 
+    router_path: [&'static str; 2],
     config: config::AppConfig
 }
 
@@ -121,6 +122,7 @@ impl Default for ExaltaLauncher {
             runtime,
             run_res,
 
+            router_path: [""; 2],
             config: config::AppConfig::load().unwrap_or_default()
         };
 
@@ -150,18 +152,44 @@ impl Default for ExaltaLauncher {
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(2.0);
+        egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
+            use egui::{Rect, Vec2, Button, RichText,};
+            ui.heading("Exalta Launcher");
+            let rect = ui.max_rect();
+            let settings_resp = ui.put(
+                Rect::from_points(&[rect.right_top()]),
+                Button::new(RichText::new("\u{2699}")).frame(false),
+            );
+            if settings_resp.clicked() {
+                if *self.router_path.last().unwrap() == "config" {
+                    self.mutate_router_back();
+                }
+                else {
+                    self.mutate_router("config");
+                }
+            }
+
+        });
         if let Err(err) = egui::CentralPanel::default()
             .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
-                ui.heading("Exalta Launcher");
 
-                // play
-                if self.account.is_some() {
-                    self.render_play(ui)
+                match *self.router_path.last().unwrap() {
+                    "play" => {
+                        if self.account.is_some() {
+                            self.render_play(ui)
+                        }
+                        else {
+                             todo!()
+                        }
+                    },
+                    "config" => {
+                        self.render_config(ui)
+                    },
+                    _ => {
+                        self.render_login(ui)
+                    }
                 }
-                // login
-                else {
-                    self.render_login(ui)
-                }
+
             })
             .inner
         {
@@ -227,6 +255,7 @@ impl ExaltaLauncher {
         ))?;
 
         self.account = Some(acc);
+        self.mutate_router("play");
 
         if self.auth_save {
             if let Ok(json) = serde_json::to_string(&self.auth) {
@@ -248,5 +277,13 @@ impl ExaltaLauncher {
                     .ok();
             });
         }
+    }
+
+    pub fn mutate_router(&mut self, route: &'static str) {
+        self.router_path.rotate_left(1);
+        *self.router_path.last_mut().unwrap() = route;
+    }
+    pub fn mutate_router_back(&mut self) {
+        self.router_path.rotate_right(1);
     }
 }

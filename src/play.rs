@@ -33,6 +33,7 @@ impl ExaltaLauncher {
             }
             ui.add_space(10.);
             if ui.button("Logout").clicked() {
+                self.mutate_router("");
                 self.account = None;
             }
             Ok(())

@@ -19,10 +19,6 @@ pub async fn request_checksums(
 ) -> Result<ChecksumFiles, Box<dyn std::error::Error>> {
     let url = get_build_url(build_hash, platform, "checksum.json")?;
 
-    // let mut defheaders = DEFAULT_HEADERS.clone();
-    // defheaders.remove("Host");
-    // defheaders.append("Host", "");
-
     let mut defheaders = HeaderMap::new();
     defheaders.append("Host", BUILD_URL.host_str().unwrap().parse()?);
 

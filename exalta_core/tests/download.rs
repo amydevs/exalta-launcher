@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod download_tests {
-    use exalta_core::misc::*;
     use exalta_core::download::*;
+    use exalta_core::misc::*;
 
     #[tokio::test]
     async fn test_init() -> Result<(), Box<dyn std::error::Error>> {

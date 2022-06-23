@@ -6,8 +6,8 @@ use reqwest::{
     Client, Url,
 };
 
-pub mod download;
 pub mod auth;
+pub mod download;
 pub mod misc;
 
 static BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());

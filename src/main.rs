@@ -90,17 +90,17 @@ impl Default for ExaltaLauncher {
 
                 #[cfg(windows)]
                 if config.build_hash.is_empty() {
-                    if registry_build_hash != buildhash {
+                    if &registry_build_hash != &buildhash {
                         return Err(update_error);
                     } else {
                         config.build_hash = buildhash;
                         config.save()?;
                     }
                 } else {
-                    if registry_build_hash == buildhash {
+                    if &registry_build_hash == &buildhash {
                         config.build_hash = buildhash;
                         config.save()?;
-                    } else if config.build_hash != buildhash {
+                    } else if &config.build_hash != &buildhash {
                         return Err(update_error);
                     }
                 }

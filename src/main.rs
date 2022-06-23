@@ -1,6 +1,8 @@
 use exalta_core::auth::{account::Account, *};
-use serde::{Deserialize, Serialize};
+use main_ext::{LauncherAuth, ResultTimeWrapper};
 use tokio::runtime::Runtime;
+
+mod main_ext;
 
 mod login;
 mod play;
@@ -12,7 +14,7 @@ mod config;
 #[cfg(windows)]
 mod registries;
 
-use eframe::{egui::{self, Layout}, emath::Pos2};
+use eframe::egui;
 
 fn main() {
     let options = eframe::NativeOptions::default();
@@ -30,24 +32,6 @@ fn main() {
             Box::new(ExaltaLauncher::default())
         }),
     );
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct LauncherAuth {
-    guid: String,
-    password: String,
-}
-struct ResultTimeWrapper {
-    result: Result<(), Box<dyn std::error::Error>>,
-    time: std::time::Instant,
-}
-impl Default for ResultTimeWrapper {
-    fn default() -> Self {
-        Self {
-            result: Ok(()),
-            time: std::time::Instant::now(),
-        }
-    }
 }
 
 struct ExaltaLauncher {

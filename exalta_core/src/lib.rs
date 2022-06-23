@@ -6,6 +6,7 @@ use reqwest::{
     Client, Url,
 };
 
+pub mod download;
 pub mod auth;
 pub mod misc;
 

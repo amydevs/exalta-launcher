@@ -17,6 +17,7 @@ impl ExaltaLauncher {
                     self.account.as_ref().unwrap().stats.fame,
                 ));
             });
+
             ui.add_space(10.);
             if ui.button("Play").clicked() {
                 if self
@@ -31,6 +32,11 @@ impl ExaltaLauncher {
                     self.account = None;
                 }
             }
+
+            ui.add_space(10.);
+            if ui.button("Update / Verify Files").clicked() {
+            }
+
             ui.add_space(10.);
             if ui.button("Logout").clicked() {
                 self.mutate_router("");
@@ -39,6 +45,14 @@ impl ExaltaLauncher {
             Ok(())
         })
         .inner
+    }
+    fn download(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(user_dirs) = UserDirs::new() {
+            if let Some(document_dir) = user_dirs.document_dir() {
+                let game_path = document_dir.join("RealmOfTheMadGod/Production/");
+            }
+        }
+        Ok(())
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(user_dirs) = UserDirs::new() {

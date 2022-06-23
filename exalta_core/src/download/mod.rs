@@ -1,9 +1,13 @@
-use std::{fs, path::{Path, PathBuf}, io::{Write, Read}};
+use std::{
+    fs,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+};
 
 use once_cell::sync::Lazy;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Method, Url, Response,
+    Method, Response, Url,
 };
 
 use crate::CLIENT;
@@ -39,26 +43,22 @@ pub async fn download_files_from_checksums(
     platform: &str,
     dir: &PathBuf,
     checksums_files: &Vec<File>,
-    mut progress: Option<&mut f32>
+    mut progress: Option<&mut f32>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;
-        for n in 0..max_retries+1 {
-            if download_file_and_check(
-                build_hash,
-                platform,
-                dir,
-                &checksum
-            ).await.is_ok() {
+        for n in 0..max_retries + 1 {
+            if download_file_and_check(build_hash, platform, dir, &checksum)
+                .await
+                .is_ok()
+            {
                 break;
-            }
-            else if n == max_retries {
+            } else if n == max_retries {
                 Err(format!("Download Failed!"))?;
             }
         }
         if let Some(progress) = progress.as_deref_mut() {
-            *progress = (i+1) as f32 / checksums_files.len() as f32
+            *progress = (i + 1) as f32 / checksums_files.len() as f32
         }
     }
     Ok(())
@@ -67,15 +67,10 @@ pub async fn download_file_and_check(
     build_hash: &str,
     platform: &str,
     dir: &PathBuf,
-    file: &File
+    file: &File,
 ) -> Result<(), Box<dyn std::error::Error>> {
     for _ in 0..2 {
-        download_file(
-            build_hash,
-            platform,
-            dir,
-            &file
-        ).await?;
+        download_file(build_hash, platform, dir, &file).await?;
     }
     Ok(())
 }
@@ -83,7 +78,7 @@ pub async fn download_file(
     build_hash: &str,
     platform: &str,
     dir: &PathBuf,
-    file: &File
+    file: &File,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_dir = dir.join(&file.file);
     if !file_dir.is_dir() {
@@ -102,8 +97,14 @@ pub async fn download_file(
     if !file_valid_flag {
         use futures_util::stream::StreamExt;
 
-        let mut bstream = request_file(build_hash, platform, &file.file).await?.bytes_stream();
-        let mut got_file = fs::File::options().read(true).write(true).create(true).open(&file_dir)?;
+        let mut bstream = request_file(build_hash, platform, &file.file)
+            .await?
+            .bytes_stream();
+        let mut got_file = fs::File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(&file_dir)?;
         got_file.set_len(0)?;
 
         while let Some(item) = bstream.next().await {
@@ -118,7 +119,7 @@ pub async fn download_file(
 pub async fn request_file(
     build_hash: &str,
     platform: &str,
-    file: &str
+    file: &str,
 ) -> Result<Response, Box<dyn std::error::Error>> {
     let url = get_build_url(build_hash, platform, file)?;
 

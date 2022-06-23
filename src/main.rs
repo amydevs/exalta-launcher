@@ -61,7 +61,6 @@ impl Default for ExaltaLauncher {
 
         let mut config = config::AppConfig::load().unwrap_or_default();
 
-       
         {
             use update::UpdateError;
 
@@ -69,8 +68,7 @@ impl Default for ExaltaLauncher {
                 "An update for the game is available, please run the official launcher to update the game first."
             )));
 
-            let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
-
+            let update_checker = || -> Result<(), Box<dyn std::error::Error>> {
                 #[cfg(windows)]
                 let registry_build_hash = crate::registries::get_build_id()?;
                 #[cfg(not(windows))]
@@ -80,13 +78,15 @@ impl Default for ExaltaLauncher {
                     .block_on(exalta_core::misc::init(None, None))?
                     .build_hash;
 
-                println!("Old: {} == New: {}", 
-                if registry_build_hash.is_empty() {
-                    &config.build_hash
-                }
-                else {
-                    &registry_build_hash
-                }, buildhash);
+                println!(
+                    "Old: {} == New: {}",
+                    if registry_build_hash.is_empty() {
+                        &config.build_hash
+                    } else {
+                        &registry_build_hash
+                    },
+                    buildhash
+                );
 
                 #[cfg(windows)]
                 if config.build_hash.is_empty() {
@@ -113,16 +113,14 @@ impl Default for ExaltaLauncher {
                 Ok(())
             };
 
-            run_res = ResultTimeWrapper {
-                result: regirunner().map_err(|x| {
-                    if x.is::<UpdateError>() {
-                        x
-                    } else {
-                        Box::new(UpdateError(String::from("Failed to check for updates.")))
-                    }
-                }),
-                time: std::time::Instant::now(),
-            };
+            run_res = ResultTimeWrapper::default();
+            run_res.result = update_checker().map_err(|x| {
+                if x.is::<UpdateError>() {
+                    x
+                } else {
+                    Box::new(UpdateError(String::from("Failed to check for updates.")))
+                }
+            });
         }
 
         let mut self_inst = Self {

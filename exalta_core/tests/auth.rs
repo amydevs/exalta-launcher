@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod auth_tests {
     use exalta_core::auth::{account::Account, AuthInfo};
 
     #[tokio::test]

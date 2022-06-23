@@ -3,6 +3,8 @@ use std::{fs::File, path::{Path, PathBuf}, io::{Read, Write}};
 use directories::{BaseDirs, UserDirs, ProjectDirs};
 use serde::{Deserialize, Serialize};
 
+mod gui;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
     pub dark: bool

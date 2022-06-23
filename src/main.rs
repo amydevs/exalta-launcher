@@ -13,6 +13,7 @@ mod launchargs;
 
 #[cfg(windows)]
 mod registries;
+mod update;
 
 use eframe::egui;
 
@@ -60,34 +61,53 @@ impl Default for ExaltaLauncher {
 
         let mut config = config::AppConfig::load().unwrap_or_default();
 
-        #[cfg(windows)]
+       
         {
-            use registries::UpdateError;
+            use update::UpdateError;
 
             let update_error = Box::new(UpdateError(String::from(
                 "An update for the game is available, please run the official launcher to update the game first."
             )));
 
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
-                let buildid = crate::registries::get_build_id()?;
+
+                #[cfg(windows)]
+                let registry_build_hash = crate::registries::get_build_id()?;
+                #[cfg(not(windows))]
+                let registry_build_hash = String::new();
+
                 let buildhash = runtime
                     .block_on(exalta_core::misc::init(None, None))?
                     .build_hash;
-                println!("Old: {} == New: {}", buildid, buildhash);
+
+                println!("Old: {} == New: {}", 
+                if registry_build_hash.is_empty() {
+                    &config.build_hash
+                }
+                else {
+                    &registry_build_hash
+                }, buildhash);
+
+                #[cfg(windows)]
                 if config.build_hash.is_empty() {
-                    if buildid != buildhash {
+                    if registry_build_hash != buildhash {
                         return Err(update_error);
                     } else {
                         config.build_hash = buildhash;
                         config.save()?;
                     }
                 } else {
-                    if buildid == buildhash {
+                    if registry_build_hash == buildhash {
                         config.build_hash = buildhash;
                         config.save()?;
                     } else if config.build_hash != buildhash {
                         return Err(update_error);
                     }
+                }
+
+                #[cfg(not(windows))]
+                if config.build_hash != buildhash {
+                    return Err(update_error);
                 }
 
                 Ok(())

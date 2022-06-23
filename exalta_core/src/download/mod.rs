@@ -43,7 +43,7 @@ pub async fn download_files_from_checksums(
     
     for checksum in checksums.files {
         let max_retries = 2;
-        for n in 0..max_retries {
+        for n in 0..max_retries+1 {
             if download_file_and_check(
                 build_hash,
                 platform,
@@ -53,7 +53,7 @@ pub async fn download_files_from_checksums(
                 break;
             }
             else if n == max_retries {
-                
+                Err(format!("Download Failed!"))?;
             }
         }
     }

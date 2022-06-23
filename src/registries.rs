@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, string};
+use std::{error::Error, fmt};
 
 use winreg::{enums::*, RegKey};
 

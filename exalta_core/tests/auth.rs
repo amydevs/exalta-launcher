@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use exalta_core::auth::{account::Account, steamworks::encode_hex, AuthInfo};
+    use exalta_core::auth::{account::Account, AuthInfo};
 
     #[tokio::test]
     async fn test_login() {

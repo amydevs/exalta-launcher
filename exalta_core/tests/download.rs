@@ -1,5 +1,8 @@
 #[cfg(test)]
 mod download_tests {
+    use std::path::Path;
+    use std::path::PathBuf;
+
     use exalta_core::download::*;
     use exalta_core::misc::*;
 
@@ -12,8 +15,9 @@ mod download_tests {
     #[tokio::test]
     async fn test_checksums() -> Result<(), Box<dyn std::error::Error>> {
         let build_hash = get_build_hash().await?;
-        let things = request_checksums(&build_hash, "rotmg-exalt-win-64").await?;
-        println!("{:?}", things);
+        let platform = "rotmg-exalt-win-64";
+        let things = request_checksums(&build_hash, platform).await?;
+        download_file(&build_hash, platform, &PathBuf::from("./help"), &things.files[0]).await?;
         Ok(())
     }
 

@@ -721,6 +721,7 @@ name = "exalta_core"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "futures-util",
  "md5",
  "once_cell",
  "quick-xml",

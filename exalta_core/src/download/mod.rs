@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{fs, path::{Path, PathBuf}, io::{Write, Read}};
 
 use once_cell::sync::Lazy;
 use reqwest::{
@@ -34,10 +34,51 @@ pub async fn request_checksums(
     Ok(serde_json::from_str::<ChecksumFiles>(&resp_text)?)
 }
 
+pub async fn download_files_from_checksums(
+    build_hash: &str,
+    platform: &str,
+    dir: &PathBuf,
+    checksums: ChecksumFiles
+) -> Result<(), Box<dyn std::error::Error>> {
+    
+    for checksum in checksums.files {
+        let max_retries = 2;
+        for n in 0..max_retries {
+            if download_file_and_check(
+                build_hash,
+                platform,
+                dir,
+                &checksum
+            ).await.is_ok() {
+                break;
+            }
+            else if n == max_retries {
+                
+            }
+        }
+    }
+    Ok(())
+}
+pub async fn download_file_and_check(
+    build_hash: &str,
+    platform: &str,
+    dir: &PathBuf,
+    file: &File
+) -> Result<(), Box<dyn std::error::Error>> {
+    for _ in 0..2 {
+        download_file(
+            build_hash,
+            platform,
+            dir,
+            &file
+        ).await?;
+    }
+    Ok(())
+}
 pub async fn download_file(
     build_hash: &str,
     platform: &str,
-    dir: &Path,
+    dir: &PathBuf,
     file: &File
 ) -> Result<(), Box<dyn std::error::Error>> {
     let file_dir = dir.join(&file.file);
@@ -48,14 +89,23 @@ pub async fn download_file(
     }
 
     let mut file_valid_flag = false;
-    if let Ok(got_file) = fs::read(file_dir) {
+    if let Ok(got_file) = fs::read(&file_dir) {
         if file.checksum == format!("{:x}", md5::compute(got_file)) {
             file_valid_flag = true;
         }
     };
 
     if !file_valid_flag {
-        let bstream = request_file(build_hash, platform, &file.file).await?.bytes_stream();
+        use futures_util::stream::StreamExt;
+
+        let mut bstream = request_file(build_hash, platform, &file.file).await?.bytes_stream();
+        let mut got_file = fs::File::options().read(true).write(true).create(true).open(&file_dir)?;
+        got_file.set_len(0)?;
+
+        while let Some(item) = bstream.next().await {
+            let chunk = item?;
+            got_file.write_all(&chunk)?;
+        }
     }
 
     Ok(())

@@ -58,9 +58,15 @@ impl Default for ExaltaLauncher {
 
         let runtime = Runtime::new().unwrap();
 
+        let mut config = config::AppConfig::load().unwrap_or_default();
+
         #[cfg(windows)]
         {
             use registries::UpdateError;
+
+            let update_error = Box::new(UpdateError(String::from(
+                "An update for the game is available, please run the official launcher to update the game first."
+            )));
 
             let regirunner = || -> Result<(), Box<dyn std::error::Error>> {
                 let buildid = crate::registries::get_build_id()?;
@@ -68,11 +74,22 @@ impl Default for ExaltaLauncher {
                     .block_on(exalta_core::misc::init(None, None))?
                     .build_hash;
                 println!("Old: {} == New: {}", buildid, buildhash);
-                if buildid != buildhash {
-                    return Err(Box::new(UpdateError(String::from(
-                        "An update for the game is available, please run the official launcher to update the game first."
-                    ))));
+                if config.build_hash.is_empty() {
+                    if buildid != buildhash {
+                        return Err(update_error);
+                    } else {
+                        config.build_hash = buildhash;
+                        config.save()?;
+                    }
+                } else {
+                    if buildid == buildhash {
+                        config.build_hash = buildhash;
+                        config.save()?;
+                    } else if config.build_hash != buildhash {
+                        return Err(update_error);
+                    }
                 }
+
                 Ok(())
             };
 
@@ -104,7 +121,7 @@ impl Default for ExaltaLauncher {
             run_res,
 
             router_path: [""; 2],
-            config: config::AppConfig::load().unwrap_or_default(),
+            config,
         };
 
         #[cfg(feature = "steam")]

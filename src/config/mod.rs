@@ -13,12 +13,14 @@ mod gui;
 pub struct AppConfig {
     pub dark: bool,
     pub save_login: bool,
+    pub build_hash: String,
 }
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
             dark: false,
             save_login: true,
+            build_hash: String::new(),
         }
     }
 }

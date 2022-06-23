@@ -61,6 +61,8 @@ struct ExaltaLauncher {
     runtime: Runtime,
 
     run_res: ResultTimeWrapper,
+
+    config: config::AppConfig
 }
 
 impl Default for ExaltaLauncher {
@@ -116,6 +118,8 @@ impl Default for ExaltaLauncher {
             entry,
             runtime,
             run_res,
+
+            config: config::AppConfig::load().unwrap_or_default()
         };
 
         #[cfg(feature = "steam")]

@@ -19,7 +19,6 @@ impl ExaltaLauncher {
                     ui.ctx().set_visuals(egui::Visuals::light());
                 }
             }
-            println!("{}", changed);
 
             if changed {
                 self.config.save()?;

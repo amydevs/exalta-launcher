@@ -7,6 +7,7 @@ mod play;
 
 mod args;
 mod launchargs;
+mod config;
 
 #[cfg(windows)]
 mod registries;
@@ -18,7 +19,14 @@ fn main() {
     eframe::run_native(
         "Exalta Launcher",
         options,
-        Box::new(|_cc| Box::new(ExaltaLauncher::default())),
+        Box::new(|_cc|  {
+            let config = config::AppConfig::load().unwrap_or_default();
+            if config.dark {
+                _cc.egui_ctx.set_visuals(egui::Visuals::dark());
+            }
+            
+            Box::new(ExaltaLauncher::default())
+        }),
     );
 }
 

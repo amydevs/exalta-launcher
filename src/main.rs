@@ -8,8 +8,8 @@ mod login;
 mod play;
 
 mod args;
-mod launchargs;
 mod config;
+mod launchargs;
 
 #[cfg(windows)]
 mod registries;
@@ -21,14 +21,13 @@ fn main() {
     eframe::run_native(
         "Exalta Launcher",
         options,
-        Box::new(|_cc|  {  
-            let config = config::AppConfig::load().unwrap_or_default();  
+        Box::new(|_cc| {
+            let config = config::AppConfig::load().unwrap_or_default();
             if config.dark {
                 _cc.egui_ctx.set_visuals(egui::Visuals::dark());
-            }
-            else {
+            } else {
                 _cc.egui_ctx.set_visuals(egui::Visuals::light());
-            }     
+            }
             Box::new(ExaltaLauncher::default())
         }),
     );
@@ -48,7 +47,7 @@ struct ExaltaLauncher {
     run_res: ResultTimeWrapper,
 
     router_path: [&'static str; 2],
-    config: config::AppConfig
+    config: config::AppConfig,
 }
 
 impl Default for ExaltaLauncher {
@@ -99,13 +98,13 @@ impl Default for ExaltaLauncher {
             #[cfg(feature = "steam")]
             steam_client: ::steamworks::Client::init_app(200210).ok(),
             steam_credentials: None,
-            
+
             entry,
             runtime,
             run_res,
 
             router_path: [""; 2],
-            config: config::AppConfig::load().unwrap_or_default()
+            config: config::AppConfig::load().unwrap_or_default(),
         };
 
         #[cfg(feature = "steam")]
@@ -115,7 +114,7 @@ impl Default for ExaltaLauncher {
             );
             self_inst.run_res = ResultTimeWrapper::default();
             self_inst.run_res.result = self_inst.login();
-        } 
+        }
 
         #[cfg(not(feature = "steam"))]
         if let Ok(val) = self_inst.entry.get_password() {
@@ -135,14 +134,11 @@ impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(2.0);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
-            use egui::{Rect, Button, RichText, Vec2};
+            use egui::{Button, Rect, RichText, Vec2};
             ui.heading("Exalta Launcher");
             let rect = ui.max_rect();
 
-            let right_top = rect.right_top() + Vec2 {
-                x: -4.5,
-                y: 1.
-            };
+            let right_top = rect.right_top() + Vec2 { x: -4.5, y: 1. };
             let settings_resp = ui.put(
                 Rect::from_points(&[right_top]),
                 Button::new(RichText::new("\u{2699}")).frame(false),
@@ -150,33 +146,24 @@ impl eframe::App for ExaltaLauncher {
             if settings_resp.clicked() {
                 if *self.router_path.last().unwrap() == "config" {
                     self.mutate_router_back();
-                }
-                else {
+                } else {
                     self.mutate_router("config");
                 }
             }
-
         });
         if let Err(err) = egui::CentralPanel::default()
             .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
-
                 match *self.router_path.last().unwrap() {
                     "play" => {
                         if self.account.is_some() {
                             self.render_play(ui)
+                        } else {
+                            todo!()
                         }
-                        else {
-                             todo!()
-                        }
-                    },
-                    "config" => {
-                        self.render_config(ui)
-                    },
-                    _ => {
-                        self.render_login(ui)
                     }
+                    "config" => self.render_config(ui),
+                    _ => self.render_login(ui),
                 }
-
             })
             .inner
         {
@@ -227,7 +214,7 @@ impl ExaltaLauncher {
             ))?);
 
             user.cancel_authentication_ticket(auth);
-        } 
+        }
         self.run_inits();
         Ok(())
     }

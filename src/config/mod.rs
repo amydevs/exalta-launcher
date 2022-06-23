@@ -1,6 +1,10 @@
-use std::{fs::File, path::{Path, PathBuf}, io::{Read, Write}};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+};
 
-use directories::{BaseDirs, UserDirs, ProjectDirs};
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -12,9 +16,9 @@ pub struct AppConfig {
 }
 impl Default for AppConfig {
     fn default() -> Self {
-        Self { 
+        Self {
             dark: false,
-            save_login: true
+            save_login: true,
         }
     }
 }
@@ -40,7 +44,7 @@ impl AppConfig {
         let cfg = serde_json::from_str(&config)?;
         Ok(cfg)
     }
-    
+
     pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let config = serde_json::to_string(&self)?;
         let location = Self::get_location()?;
@@ -51,7 +55,7 @@ impl AppConfig {
         Ok(())
     }
     pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
-        let config= Self::load_config(&Self::get_location()?)?;
+        let config = Self::load_config(&Self::get_location()?)?;
         Ok(config)
     }
 }

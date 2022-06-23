@@ -50,15 +50,18 @@ impl ExaltaLauncher {
                             platform: "Steam".to_string(),
                             guid: base64::encode(&self.auth.guid),
                             platform_token: Some(base64::encode(&steam_creds.platform_token)),
-                            steam_id: Some(base64::encode(&self.auth.guid.replace("steamworks:", ""))),
+                            steam_id: Some(base64::encode(
+                                &self.auth.guid.replace("steamworks:", ""),
+                            )),
                             token: base64::encode(account.access_token.clone()),
                             token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                            token_expiration: base64::encode(account.access_token_expiration.clone()),
+                            token_expiration: base64::encode(
+                                account.access_token_expiration.clone(),
+                            ),
                             env: 4,
                             server_name: String::new(),
                         })?
-                    }
-                    else {
+                    } else {
                         serde_json::to_string(&LaunchArgs {
                             platform: "Deca".to_string(),
                             guid: base64::encode(&self.auth.guid),
@@ -66,11 +69,15 @@ impl ExaltaLauncher {
                             steam_id: None,
                             token: base64::encode(account.access_token.clone()),
                             token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                            token_expiration: base64::encode(account.access_token_expiration.clone()),
+                            token_expiration: base64::encode(
+                                account.access_token_expiration.clone(),
+                            ),
                             env: 4,
                             server_name: String::new(),
                         })?
-                    }.replace(",\"serverName\":null", ",\"serverName\":").replace("\"", "");
+                    }
+                    .replace(",\"serverName\":null", ",\"serverName\":")
+                    .replace("\"", "");
                     println!("{}", args);
                     Command::new(execpath.to_str().unwrap())
                         .args(&[format!("data:{}", args)])

@@ -58,7 +58,7 @@ pub async fn download_files_from_checksums(
             }
         }
         if let Some(progress) = progress.as_deref_mut() {
-            *progress = i as f32 / checksums_files.len() as f32
+            *progress = (i+1) as f32 / checksums_files.len() as f32
         }
     }
     Ok(())

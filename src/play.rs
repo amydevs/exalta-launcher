@@ -99,8 +99,7 @@ impl ExaltaLauncher {
                             &checksums.files,
                             Some(prog_clone_1),
                         )
-                        .await
-                        .map,
+                        .await,
                     );
                     println!("Download Ended!");
                 }

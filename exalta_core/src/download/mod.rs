@@ -1,7 +1,7 @@
 use std::{
     fs,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, sync::Arc,
 };
 
 use once_cell::sync::Lazy;
@@ -9,6 +9,7 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
     Method, Response, Url,
 };
+use tokio::sync::RwLock;
 
 use crate::CLIENT;
 
@@ -45,7 +46,7 @@ pub async fn download_files_from_checksums(
     platform: &str,
     dir: &PathBuf,
     checksums_files: &Vec<File>,
-    mut progress: Option<&mut f32>,
+    mut progress: Option<Arc<RwLock<f32>>>,
 ) -> Result<()> {
     for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;
@@ -59,8 +60,8 @@ pub async fn download_files_from_checksums(
                 println!("Update Failed");
             }
         }
-        if let Some(progress) = progress.as_deref_mut() {
-            *progress = (i + 1) as f32 / checksums_files.len() as f32
+        if let Some(ref progress) = progress {
+            *progress.write().await = (i + 1) as f32 / checksums_files.len() as f32
         }
     }
     Ok(())

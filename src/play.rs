@@ -1,9 +1,11 @@
-use directories::UserDirs;
-use eframe::egui::Ui;
-use poll_promise::Promise;
-use tokio::process::Command;
+use std::{sync::Arc, ops::DerefMut};
 
-use crate::{launchargs::LaunchArgs, ExaltaLauncher};
+use directories::UserDirs;
+use eframe::egui::{Ui, self};
+use poll_promise::Promise;
+use tokio::{process::Command, sync::RwLock};
+
+use crate::{launchargs::LaunchArgs, ExaltaLauncher, main_ext::ResultTimeWrapper, update::UpdateError};
 
 impl ExaltaLauncher {
     pub fn render_play(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
@@ -35,33 +37,60 @@ impl ExaltaLauncher {
             }
 
             ui.add_space(10.);
-            if ui.button("Update / Verify Files").clicked() {
+            let update_button = egui::Button::new("Update / Verify");
+            if ui.add_enabled(self.download_finished.is_none(), update_button).clicked() {
                 self.download();
             }
 
+            if let Some(prom) = &self.download_finished {
+                match prom.ready() {
+                    None => {},
+                    Some(Err(_)) => {
+                        self.run_res = ResultTimeWrapper::default();
+                        self.run_res.result = Err(Box::new(UpdateError("Download Failed!".to_string())));
+                    },
+                    Some(_) => {
+                        self.download_finished = None;
+                    },
+                }
+            }
+            if self.download_finished.is_some() {
+                if let Ok(tried_prog) = self.download_prog.try_read() {
+                    ui.add_space(10.);
+                    ui.add(egui::widgets::ProgressBar::new(*tried_prog).show_percentage());
+                }
+            }
+            
             ui.add_space(10.);
             if ui.button("Logout").clicked() {
                 self.mutate_router("");
                 self.account = None;
             }
+
             Ok(())
         })
         .inner
     }
     fn download(&mut self) {
         let (sender, promise) = Promise::new();
-        self.runtime.spawn(async {
+    
+        let prog_clone_1 = self.download_prog.clone();
+        self.runtime.spawn(async move {
+            println!("Download Started!");
+            
             if let Some(user_dirs) = UserDirs::new() {
                 if let Some(document_dir) = user_dirs.document_dir() {
                     let game_path = document_dir.join("RealmOfTheMadGod/Production/");
                     let platform = "rotmg-exalt-win-64";
                     let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
                     let checksums = exalta_core::download::request_checksums(&build_hash, platform).await?;
-                    sender.send(exalta_core::download::download_files_from_checksums(&build_hash, platform, &game_path, &checksums.files, None).await);
+                    sender.send(exalta_core::download::download_files_from_checksums(&build_hash, platform, &game_path, &checksums.files, Some(prog_clone_1)).await.map);
+                    println!("Download Ended!");
                 }
             }
             Ok::<(), anyhow::Error>(())
         });
+
         self.download_finished = Some(promise);
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {

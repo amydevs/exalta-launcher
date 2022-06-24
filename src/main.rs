@@ -55,7 +55,7 @@ struct ExaltaLauncher {
     config: config::AppConfig,
 
     download_finished: Option<Promise<anyhow::Result<()>>>,
-    download_prog: Arc<RwLock<f32>>
+    download_prog: Arc<RwLock<f32>>,
 }
 
 impl Default for ExaltaLauncher {
@@ -149,7 +149,7 @@ impl Default for ExaltaLauncher {
             config,
 
             download_finished: None,
-            download_prog: Arc::new(RwLock::new(0.0))
+            download_prog: Arc::new(RwLock::new(0.0)),
         };
 
         #[cfg(feature = "steam")]
@@ -183,7 +183,6 @@ impl Default for ExaltaLauncher {
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-
         ctx.set_pixels_per_point(2.0);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
             use egui::{Button, Rect, RichText, Vec2};

@@ -1,7 +1,8 @@
 use std::{
     fs,
     io::{Read, Write},
-    path::{Path, PathBuf}, sync::Arc,
+    path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use once_cell::sync::Lazy;
@@ -22,10 +23,7 @@ use anyhow::Result;
 static BUILD_URL: Lazy<Url> =
     Lazy::new(|| Url::parse("https://rotmg-build.decagames.com/").unwrap());
 
-pub async fn request_checksums(
-    build_hash: &str,
-    platform: &str,
-) -> Result<ChecksumFiles> {
+pub async fn request_checksums(build_hash: &str, platform: &str) -> Result<ChecksumFiles> {
     let url = get_build_url(build_hash, platform, "checksum.json")?;
 
     let mut defheaders = HeaderMap::new();
@@ -119,11 +117,7 @@ pub async fn download_file(
     Ok(())
 }
 
-pub async fn request_file(
-    build_hash: &str,
-    platform: &str,
-    file: &str,
-) -> Result<Response> {
+pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Result<Response> {
     let url = get_build_url(build_hash, platform, file)?;
 
     let mut defheaders = HeaderMap::new();
@@ -137,10 +131,6 @@ pub async fn request_file(
     Ok(resp)
 }
 
-fn get_build_url(
-    build_hash: &str,
-    platform: &str,
-    file: &str,
-) -> Result<Url> {
+fn get_build_url(build_hash: &str, platform: &str, file: &str) -> Result<Url> {
     Ok(BUILD_URL.join(format!("build-release/{}/{}/{}", build_hash, platform, file).as_str())?)
 }

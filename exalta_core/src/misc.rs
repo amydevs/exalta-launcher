@@ -3,10 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 use anyhow::Result;
 
-pub async fn init(
-    game_net: Option<&str>,
-    access_token: Option<&str>,
-) -> Result<AppSettings> {
+pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<AppSettings> {
     let mut params = DEFAULT_PARAMS.read().unwrap().clone();
 
     if let Some(game_net) = game_net {

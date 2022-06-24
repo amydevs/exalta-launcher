@@ -15,9 +15,7 @@ pub fn encode_hex(bytes: &[u8]) -> String {
     s
 }
 
-pub async fn request_credentials(
-    session_token: &str,
-) -> Result<Credentials> {
+pub async fn request_credentials(session_token: &str) -> Result<Credentials> {
     let sessionticketparams = [
         coll_to_owned(vec![("sessionticket", session_token)]),
         DEFAULT_PARAMS.read().unwrap().to_vec(),

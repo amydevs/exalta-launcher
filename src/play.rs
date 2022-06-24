@@ -1,5 +1,6 @@
 use directories::UserDirs;
 use eframe::egui::Ui;
+use poll_promise::Promise;
 use tokio::process::Command;
 
 use crate::{launchargs::LaunchArgs, ExaltaLauncher};
@@ -35,6 +36,7 @@ impl ExaltaLauncher {
 
             ui.add_space(10.);
             if ui.button("Update / Verify Files").clicked() {
+                self.download();
             }
 
             ui.add_space(10.);
@@ -46,8 +48,8 @@ impl ExaltaLauncher {
         })
         .inner
     }
-    fn download(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.runtime.spawn(async {
+    fn download(&mut self) {
+        self.download_finished = Some(Promise::spawn_async(async {
             if let Some(user_dirs) = UserDirs::new() {
                 if let Some(document_dir) = user_dirs.document_dir() {
                     let game_path = document_dir.join("RealmOfTheMadGod/Production/");                    let platform = "rotmg-exalt-win-64";
@@ -57,8 +59,7 @@ impl ExaltaLauncher {
                 }
             }
             Ok::<(), anyhow::Error>(())
-        });
-        Ok(())
+        }));
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(user_dirs) = UserDirs::new() {

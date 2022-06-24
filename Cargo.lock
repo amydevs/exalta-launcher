@@ -716,6 +716,7 @@ dependencies = [
  "eframe",
  "exalta_core",
  "keyring",
+ "poll-promise",
  "serde",
  "serde_json",
  "steamworks",
@@ -1803,6 +1804,16 @@ name = "pkg-config"
 version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
+
+[[package]]
+name = "poll-promise"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "260817b339544e5b23d4bb66d4522d89dd64af88d16b6dcd7b2a2409ee2e095d"
+dependencies = [
+ "static_assertions",
+ "tokio",
+]
 
 [[package]]
 name = "polling"

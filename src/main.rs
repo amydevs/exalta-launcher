@@ -1,5 +1,6 @@
 use exalta_core::auth::{account::Account, *};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
+use poll_promise::Promise;
 use tokio::runtime::Runtime;
 
 mod main_ext;
@@ -49,6 +50,8 @@ struct ExaltaLauncher {
 
     router_path: [&'static str; 2],
     config: config::AppConfig,
+
+    download_finished: Option<Promise<anyhow::Result<()>>>,
 }
 
 impl Default for ExaltaLauncher {
@@ -140,6 +143,8 @@ impl Default for ExaltaLauncher {
 
             router_path: [""; 2],
             config,
+
+            download_finished: None,
         };
 
         #[cfg(feature = "steam")]
@@ -173,6 +178,20 @@ impl Default for ExaltaLauncher {
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if let Some(prom) = &self.download_finished {
+            match prom.ready() {
+                None => {
+
+                },
+                Some(Err(error)) => {
+                    
+                },
+                Some(_) => {
+
+                },
+            }
+        }
+
         ctx.set_pixels_per_point(2.0);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
             use egui::{Button, Rect, RichText, Vec2};

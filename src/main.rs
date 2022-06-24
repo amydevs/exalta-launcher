@@ -75,7 +75,7 @@ impl Default for ExaltaLauncher {
 
             let update_runner = || -> Result<(), Box<dyn std::error::Error>> {
                 #[cfg(windows)]
-                let registry_build_hash = crate::registries::get_build_id()?;
+                let registry_build_hash = crate::registries::get_build_id()?.replace("\u{0}", "");
                 #[cfg(not(windows))]
                 let registry_build_hash = String::new();
 
@@ -84,13 +84,13 @@ impl Default for ExaltaLauncher {
                     .build_hash;
 
                 println!(
-                    "Old: {} == New: {}",
+                    "Old: {:X?} == New: {:X?}",
                     if registry_build_hash.is_empty() {
                         &config.build_hash
                     } else {
                         &registry_build_hash
                     },
-                    buildhash
+                    &buildhash
                 );
 
                 #[cfg(windows)]

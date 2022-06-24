@@ -41,13 +41,13 @@ impl ExaltaLauncher {
             ui.add_space(10.);
             let update_button = egui::Button::new("Update / Verify");
             if ui
-                .add_enabled(self.download_finished.is_none(), update_button)
+                .add_enabled(self.download_finished_build_hash.is_none(), update_button)
                 .clicked()
             {
                 self.download();
             }
 
-            if let Some(prom) = &self.download_finished {
+            if let Some(prom) = &self.download_finished_build_hash {
                 match prom.ready() {
                     None => {}
                     Some(Err(_)) => {
@@ -56,11 +56,11 @@ impl ExaltaLauncher {
                             Err(Box::new(UpdateError("Download Failed!".to_string())));
                     }
                     Some(_) => {
-                        self.download_finished = None;
+                        self.download_finished_build_hash = None;
                     }
                 }
             }
-            if self.download_finished.is_some() {
+            if self.download_finished_build_hash.is_some() {
                 if let Ok(tried_prog) = self.download_prog.try_read() {
                     ui.add_space(10.);
                     ui.add(egui::widgets::ProgressBar::new(*tried_prog).show_percentage());
@@ -99,7 +99,9 @@ impl ExaltaLauncher {
                             &checksums.files,
                             Some(prog_clone_1),
                         )
-                        .await,
+                        .await.map(|_| {
+                            return build_hash
+                        }),
                     );
                     println!("Download Ended!");
                 }
@@ -107,7 +109,7 @@ impl ExaltaLauncher {
             Ok::<(), anyhow::Error>(())
         });
 
-        self.download_finished = Some(promise);
+        self.download_finished_build_hash = Some(promise);
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(user_dirs) = UserDirs::new() {

@@ -54,7 +54,7 @@ struct ExaltaLauncher {
     router_path: [&'static str; 2],
     config: config::AppConfig,
 
-    download_finished: Option<Promise<anyhow::Result<()>>>,
+    download_finished_build_hash: Option<Promise<anyhow::Result<String>>>,
     download_prog: Arc<RwLock<f32>>,
 }
 
@@ -148,7 +148,7 @@ impl Default for ExaltaLauncher {
             router_path: [""; 2],
             config,
 
-            download_finished: None,
+            download_finished_build_hash: None,
             download_prog: Arc::new(RwLock::new(0.0)),
         };
 

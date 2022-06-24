@@ -24,13 +24,25 @@ pub fn get_build_id() -> Result<String, Box<dyn std::error::Error>> {
     }
 }
 
-#[derive(Debug)]
-pub struct RegistryError(pub String);
-
-impl fmt::Display for RegistryError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "RegistryError: {}", self.0)
+pub fn set_build_id(build_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let hklm = RegKey::predef(HKEY_CURRENT_USER);
+    let launcherloc =
+        hklm.open_subkey("SOFTWARE\\DECA Live Operations GmbH\\RotMG Exalt Launcher")?;
+    let mut found_key = None;
+    for row in launcherloc.enum_keys() {
+        if let Some(key) = row.ok() {
+            if key.contains("buildId") {
+                found_key = Some(key);
+            }
+        }
+    }
+    if let Some(found_key) = found_key {
+        launcherloc.set_value(found_key, &build_id)?;
+        Ok(())
+    } else {
+        Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "build id not found",
+        )))
     }
 }
-
-impl Error for RegistryError {}

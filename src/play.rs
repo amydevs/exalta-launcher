@@ -4,7 +4,7 @@ use poll_promise::Promise;
 use tokio::process::Command;
 
 use crate::{
-    launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError, ExaltaLauncher,
+    launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError, ExaltaLauncher, registries,
 };
 
 impl ExaltaLauncher {
@@ -80,6 +80,7 @@ impl ExaltaLauncher {
     fn post_download(&mut self, build_hash: &str) {
         self.download_finished_build_hash = None;
         self.config.build_hash = build_hash.to_string();
+        registries::set_build_id(build_hash).ok();
     }
     fn download(&mut self) {
         let (sender, promise) = Promise::new();

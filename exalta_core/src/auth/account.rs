@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
     #[serde(default)]
     #[serde(rename = "Credits")]
@@ -120,7 +120,7 @@ pub struct Account {
     pub access_token_expiration: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Campaigns {
     #[serde(default)]
     #[serde(rename = "CampaignProgress")]
@@ -134,14 +134,14 @@ impl Default for Campaigns {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CampaignProgress {
     #[serde(default)]
     #[serde(rename = "Points")]
     pub points: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Guild {
     #[serde(default)]
     #[serde(rename = "Name")]
@@ -156,7 +156,7 @@ pub struct Guild {
     pub id: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SecurityQuestions {
     #[serde(default)]
     #[serde(rename = "HasSecurityQuestions")]
@@ -180,7 +180,7 @@ impl Default for SecurityQuestions {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SecurityQuestionsKeys {
     #[serde(default)]
     #[serde(rename = "SecurityQuestionsKey")]
@@ -194,7 +194,7 @@ impl Default for SecurityQuestionsKeys {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Stats {
     #[serde(rename = "ClassStats")]
@@ -220,7 +220,7 @@ impl Default for Stats {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ClassStat {
     #[serde(default)]
     #[serde(rename = "BestLevel")]

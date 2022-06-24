@@ -261,6 +261,7 @@ impl ExaltaLauncher {
             self.account = Some(self.runtime.block_on(request_account(
                 &AuthInfo::default().steamworks_credentials(credentials),
             ))?);
+            self.mutate_router("play");
 
             user.cancel_authentication_ticket(auth);
         }

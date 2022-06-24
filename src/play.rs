@@ -55,8 +55,9 @@ impl ExaltaLauncher {
                         self.run_res.result =
                             Err(Box::new(UpdateError("Download Failed!".to_string())));
                     }
-                    Some(_) => {
-                        self.download_finished_build_hash = None;
+                    Some(Ok(build_hash)) => {
+                        let bh = &build_hash.clone();
+                        self.post_download(bh);
                     }
                 }
             }
@@ -76,6 +77,10 @@ impl ExaltaLauncher {
             Ok(())
         })
         .inner
+    }
+    fn post_download(&mut self, build_hash: &str) {
+        self.download_finished_build_hash = None;
+        self.config.build_hash = build_hash.to_string();
     }
     fn download(&mut self) {
         let (sender, promise) = Promise::new();

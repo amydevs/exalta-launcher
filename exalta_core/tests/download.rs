@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod download_tests {
-    use std::path::Path;
     use std::path::PathBuf;
-    use std::sync::RwLock;
 
     use exalta_core::download::*;
     use exalta_core::misc::*;
@@ -20,18 +18,16 @@ mod download_tests {
         let mut things = request_checksums(&build_hash, platform).await?;
 
         let spwn = tokio::spawn(async move {
-            let mut th = 0.0;
             things.files.truncate(2);
             download_files_from_checksums(
                 &build_hash,
                 platform,
                 &PathBuf::from("./help"),
                 &things.files,
-                Some(&mut th),
+                None,
             )
             .await
             .unwrap();
-            println!("{}", th);
         });
         spwn.await?;
         Ok(())

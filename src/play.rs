@@ -1,9 +1,7 @@
-use std::{ops::DerefMut, sync::Arc};
-
 use directories::UserDirs;
 use eframe::egui::{self, Ui};
 use poll_promise::Promise;
-use tokio::{process::Command, sync::RwLock};
+use tokio::process::Command;
 
 use crate::{
     launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError, ExaltaLauncher,
@@ -104,9 +102,8 @@ impl ExaltaLauncher {
                             &checksums.files,
                             Some(prog_clone_1),
                         )
-                        .await.map(|_| {
-                            return build_hash
-                        }),
+                        .await
+                        .map(|_| return build_hash),
                     );
                     println!("Download Ended!");
                 }

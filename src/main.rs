@@ -69,8 +69,6 @@ impl Default for ExaltaLauncher {
         let mut config = config::AppConfig::load().unwrap_or_default();
 
         {
-            use update::UpdateError;
-
             let update_error = Box::new(UpdateError(String::from(
                 "An update for the game is available, please run the official launcher to update the game first."
             )));

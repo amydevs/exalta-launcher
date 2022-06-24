@@ -1,15 +1,7 @@
-use std::{
-    fs,
-    io::{Read, Write},
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{fs, io::Write, path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
-use reqwest::{
-    header::{HeaderMap, HeaderValue},
-    Method, Response, Url,
-};
+use reqwest::{header::HeaderMap, Method, Response, Url};
 use tokio::sync::RwLock;
 
 use crate::CLIENT;
@@ -44,7 +36,7 @@ pub async fn download_files_from_checksums(
     platform: &str,
     dir: &PathBuf,
     checksums_files: &Vec<File>,
-    mut progress: Option<Arc<RwLock<f32>>>,
+    progress: Option<Arc<RwLock<f32>>>,
 ) -> Result<()> {
     for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;

@@ -21,3 +21,5 @@ Because the official launcher is a Unity game itself, and therefore has quite hi
 - [X] Run Game
 - [X] Login With Steam
 - [X] Downloading / Updating / Verifying Game Files
+- [ ] Login in Case of Security Questions
+- [ ] Signing Up 

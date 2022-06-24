@@ -15,7 +15,7 @@ pub fn get_build_id() -> Result<String, Box<dyn std::error::Error>> {
         }
     }
     if let Some(val) = found_string {
-        Ok(val)
+        Ok(val.replace("\u{0}", ""))
     } else {
         Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::NotFound,
@@ -37,7 +37,7 @@ pub fn set_build_id(build_id: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     if let Some(found_key) = found_key {
-        launcherloc.set_value(found_key, &build_id)?;
+        launcherloc.set_value(found_key, &format!("{}\u{0}", build_id))?;
         Ok(())
     } else {
         Err(Box::new(std::io::Error::new(

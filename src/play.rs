@@ -24,7 +24,8 @@ impl ExaltaLauncher {
             });
 
             ui.add_space(10.);
-            if ui.button("Play").clicked() {
+            let play_button = egui::Button::new("Play");
+            if ui.add_enabled(self.download_finished_build_hash.is_none(), play_button).clicked() {
                 if self
                     .runtime
                     .block_on(exalta_core::auth::verify_access_token(

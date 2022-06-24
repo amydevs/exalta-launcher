@@ -63,7 +63,9 @@ pub async fn download_file_and_check(
     file: &File,
 ) -> Result<()> {
     for _ in 0..2 {
-        download_file(build_hash, platform, dir, &file).await?;
+        if download_file(build_hash, platform, dir, &file).await? {
+            break;
+        }
     }
     Ok(())
 }
@@ -72,7 +74,7 @@ pub async fn download_file(
     platform: &str,
     dir: &PathBuf,
     file: &File,
-) -> Result<()> {
+) -> Result<bool> {
     let file_dir = dir.join(&file.file);
     if !file_dir.is_dir() {
         if let Some(dir) = file_dir.parent() {
@@ -106,7 +108,7 @@ pub async fn download_file(
         }
     }
 
-    Ok(())
+    Ok(file_valid_flag)
 }
 
 pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Result<Response> {

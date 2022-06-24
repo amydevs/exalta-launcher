@@ -49,17 +49,20 @@ impl ExaltaLauncher {
         .inner
     }
     fn download(&mut self) {
-        self.download_finished = Some(Promise::spawn_async(async {
+        let (sender, promise) = Promise::new();
+        self.runtime.spawn(async {
             if let Some(user_dirs) = UserDirs::new() {
                 if let Some(document_dir) = user_dirs.document_dir() {
-                    let game_path = document_dir.join("RealmOfTheMadGod/Production/");                    let platform = "rotmg-exalt-win-64";
+                    let game_path = document_dir.join("RealmOfTheMadGod/Production/");
+                    let platform = "rotmg-exalt-win-64";
                     let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
                     let checksums = exalta_core::download::request_checksums(&build_hash, platform).await?;
-                    exalta_core::download::download_files_from_checksums(&build_hash, platform, &game_path, &checksums.files, None).await?;
+                    sender.send(exalta_core::download::download_files_from_checksums(&build_hash, platform, &game_path, &checksums.files, None).await);
                 }
             }
             Ok::<(), anyhow::Error>(())
-        }));
+        });
+        self.download_finished = Some(promise);
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(user_dirs) = UserDirs::new() {

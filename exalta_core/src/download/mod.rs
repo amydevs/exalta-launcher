@@ -16,13 +16,15 @@ use self::checksumfiles::{ChecksumFiles, File};
 
 mod checksumfiles;
 
+use anyhow::Result;
+
 static BUILD_URL: Lazy<Url> =
     Lazy::new(|| Url::parse("https://rotmg-build.decagames.com/").unwrap());
 
 pub async fn request_checksums(
     build_hash: &str,
     platform: &str,
-) -> Result<ChecksumFiles, Box<dyn std::error::Error>> {
+) -> Result<ChecksumFiles> {
     let url = get_build_url(build_hash, platform, "checksum.json")?;
 
     let mut defheaders = HeaderMap::new();
@@ -44,7 +46,7 @@ pub async fn download_files_from_checksums(
     dir: &PathBuf,
     checksums_files: &Vec<File>,
     mut progress: Option<&mut f32>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;
         for n in 0..max_retries + 1 {
@@ -54,7 +56,7 @@ pub async fn download_files_from_checksums(
             {
                 break;
             } else if n == max_retries {
-                Err(format!("Download Failed!"))?;
+                println!("Update Failed");
             }
         }
         if let Some(progress) = progress.as_deref_mut() {
@@ -68,7 +70,7 @@ pub async fn download_file_and_check(
     platform: &str,
     dir: &PathBuf,
     file: &File,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     for _ in 0..2 {
         download_file(build_hash, platform, dir, &file).await?;
     }
@@ -79,7 +81,7 @@ pub async fn download_file(
     platform: &str,
     dir: &PathBuf,
     file: &File,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     let file_dir = dir.join(&file.file);
     if !file_dir.is_dir() {
         if let Some(dir) = file_dir.parent() {
@@ -120,7 +122,7 @@ pub async fn request_file(
     build_hash: &str,
     platform: &str,
     file: &str,
-) -> Result<Response, Box<dyn std::error::Error>> {
+) -> Result<Response> {
     let url = get_build_url(build_hash, platform, file)?;
 
     let mut defheaders = HeaderMap::new();
@@ -138,6 +140,6 @@ fn get_build_url(
     build_hash: &str,
     platform: &str,
     file: &str,
-) -> Result<Url, Box<dyn std::error::Error>> {
+) -> Result<Url> {
     Ok(BUILD_URL.join(format!("build-release/{}/{}/{}", build_hash, platform, file).as_str())?)
 }

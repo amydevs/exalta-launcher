@@ -18,6 +18,8 @@ quick-xml = { version = "0.23", features = [ "serialize" ] }
 
 md5 = "0.7"
 
+anyhow = "1.0"
+
 [dev-dependencies]
 dotenv = "0.15"
 steamworks = "0.9"

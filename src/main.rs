@@ -17,6 +17,7 @@ mod registries;
 mod update;
 
 use eframe::egui;
+use update::UpdateError;
 
 fn main() {
     let options = eframe::NativeOptions::default();
@@ -183,8 +184,9 @@ impl eframe::App for ExaltaLauncher {
                 None => {
 
                 },
-                Some(Err(error)) => {
-                    
+                Some(Err(_)) => {
+                    self.run_res = ResultTimeWrapper::default();
+                    self.run_res.result = Err(Box::new(UpdateError("Download Failed!".to_string())));
                 },
                 Some(_) => {
 

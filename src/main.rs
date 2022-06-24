@@ -70,7 +70,7 @@ impl Default for ExaltaLauncher {
 
         {
             let update_error = Box::new(UpdateError(String::from(
-                "An update for the game is available, please run the official launcher to update the game first."
+                "An update for the game seems to be available, please click on the \"Update / Verify / Download Game\" button once you've logged in."
             )));
 
             let update_runner = || -> Result<(), Box<dyn std::error::Error>> {

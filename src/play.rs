@@ -38,7 +38,7 @@ impl ExaltaLauncher {
             }
 
             ui.add_space(10.);
-            let update_button = egui::Button::new("Update / Verify");
+            let update_button = egui::Button::new("Update / Verify / Download Game");
             if ui
                 .add_enabled(self.download_finished_build_hash.is_none(), update_button)
                 .clicked()

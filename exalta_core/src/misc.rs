@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 pub async fn init(
     game_net: Option<&str>,

@@ -1,4 +1,5 @@
 use crate::{coll_to_owned, BASE_URL, CLIENT, CLIENT_TOKEN, DEFAULT_PARAMS};
+use anyhow::Result;
 
 use self::account::Account;
 use self::err::AuthError;
@@ -33,13 +34,13 @@ impl AuthInfo {
         self
     }
 }
-pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn std::error::Error>> {
+pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
     let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
-    let post_params: Result<Vec<(String, String)>, Box<dyn std::error::Error>> =
+    let post_params: Result<Vec<(String, String)>> =
         if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
             Ok([
                 tokenparams,
-                DEFAULT_PARAMS.read()?.to_vec(),
+                DEFAULT_PARAMS.read().unwrap().to_vec(),
                 coll_to_owned(vec![
                     ("guid", &auth_info.username),
                     ("password", &auth_info.password),
@@ -53,7 +54,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
                     ("secret", &steam_creds.secret),
                 ]),
                 tokenparams,
-                DEFAULT_PARAMS.read()?.to_vec(),
+                DEFAULT_PARAMS.read().unwrap().to_vec(),
             ]
             .concat())
         } else {
@@ -75,13 +76,13 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account, Box<dyn st
         .map_err(|e| AuthError(e.to_string()))?)
 }
 
-pub async fn verify_access_token(access_token: &str) -> Result<bool, Box<dyn std::error::Error>> {
+pub async fn verify_access_token(access_token: &str) -> Result<bool> {
     // verify
     let tokenparams = coll_to_owned(vec![
         ("clientToken", crate::CLIENT_TOKEN),
         ("accessToken", access_token),
     ]);
-    let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read()?.to_vec()].concat();
+    let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().unwrap().to_vec()].concat();
     let resp = CLIENT
         .post(BASE_URL.join("account/verifyAccessTokenClient")?)
         .form(&userpassparams)

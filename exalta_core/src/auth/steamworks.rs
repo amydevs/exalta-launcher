@@ -4,6 +4,8 @@ use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 
 use super::err::AuthError;
 
+use anyhow::Result;
+
 pub fn encode_hex(bytes: &[u8]) -> String {
     use std::fmt::Write;
     let mut s = String::with_capacity(bytes.len() * 2);
@@ -15,10 +17,10 @@ pub fn encode_hex(bytes: &[u8]) -> String {
 
 pub async fn request_credentials(
     session_token: &str,
-) -> Result<Credentials, Box<dyn std::error::Error>> {
+) -> Result<Credentials> {
     let sessionticketparams = [
         coll_to_owned(vec![("sessionticket", session_token)]),
-        DEFAULT_PARAMS.read()?.to_vec(),
+        DEFAULT_PARAMS.read().unwrap().to_vec(),
     ]
     .concat();
     let steam_creds_resp = CLIENT

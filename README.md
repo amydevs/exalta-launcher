@@ -6,10 +6,10 @@
 1. Open the application.
 
 ### Steam
-1. Copy `exalta-steam.exe` and `steam_api64.dll` inside `exalta-steam.zip` to your Realm of the Mad God launcher folder (ie: "C:\Program Files (x86)\Steam\steamapps\common\Realm of the Mad God")
+1. Create a new folder called `exalta` in your Realm of the Mad God launcher folder (ie: "C:\Program Files (x86)\Steam\steamapps\common\Realm of the Mad God"), and extract the contents of `exalta-steam.zip` into it.
 2. Paste this in your game properties launch options:
   ```bash
-  "C:\Windows\System32\cmd.exe" /c ".\exalta-steam.exe && echo %command%"
+  "C:\Windows\System32\cmd.exe" /c ".\exalta\exalta-steam.exe && echo %command%"
   ```
 
 

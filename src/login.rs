@@ -54,6 +54,7 @@ impl ExaltaLauncher {
 
     #[cfg(feature = "steam")]
     pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        use exalta_core::auth::steamworks;
         if let Some((client, single)) = &self.steam_client {
             self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
             let user = client.user();

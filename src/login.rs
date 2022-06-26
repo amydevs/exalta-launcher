@@ -1,4 +1,5 @@
 use eframe::egui::{self, Ui};
+use exalta_core::auth::{err::AuthError, request_account, request_forgot_password, AuthInfo};
 use regex::Regex;
 
 use crate::ExaltaLauncher;
@@ -71,9 +72,9 @@ impl ExaltaLauncher {
             println!("END");
             let credentials =
                 self.runtime
-                    .block_on(exalta_core::auth::steamworks::request_credentials(
-                        &exalta_core::auth::steamworks::encode_hex(&ticket),
-                    ))?;
+                    .block_on(steamworks::request_credentials(&steamworks::encode_hex(
+                        &ticket,
+                    )))?;
             self.steam_credentials = Some(credentials.clone());
             self.account = Some(self.runtime.block_on(request_account(
                 &AuthInfo::default().steamworks_credentials(credentials),
@@ -90,8 +91,8 @@ impl ExaltaLauncher {
         if !self.config.save_login {
             self.entry.delete_password().ok();
         }
-        let acc = self.runtime.block_on(exalta_core::auth::request_account(
-            &exalta_core::auth::AuthInfo::default()
+        let acc = self.runtime.block_on(request_account(
+            &AuthInfo::default()
                 .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
         ))?;
 
@@ -121,14 +122,19 @@ impl ExaltaLauncher {
     }
 
     fn reset_password(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let email_regex = Regex::new(r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})")?;
+        let email_regex = Regex::new(
+            r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})",
+        )?;
         if email_regex.is_match(&self.auth.guid) {
-            self.runtime.block_on(exalta_core::auth::request_forgot_password(&self.auth.guid))?;
+            self.runtime
+                .block_on(request_forgot_password(&self.auth.guid))?;
+        } else {
+            return Err(Box::new(AuthError(format!(
+                "{} is not a valid email!",
+                self.auth.guid
+            ))));
         }
-        else {
-            return Err(Box::new(exalta_core::auth::err::AuthError(format!("{} is not a valid email!", self.auth.guid))));
-        }
-        
+
         Ok(())
     }
 }

@@ -80,7 +80,8 @@ pub async fn request_forgot_password(guid: &str) -> Result<()> {
     let params = [
         coll_to_owned(vec![("guid", guid)]),
         DEFAULT_PARAMS.read().unwrap().to_vec(),
-    ].concat();
+    ]
+    .concat();
     let resp = CLIENT
         .post(BASE_URL.join("account/forgotPassword")?)
         .form(&params)
@@ -90,7 +91,7 @@ pub async fn request_forgot_password(guid: &str) -> Result<()> {
     let resp_text = resp.text().await?;
     if !resp_text.to_lowercase().contains("success") {
         let error_less_text = resp_text.replace("<Error>", "").replace("</Error>", "");
-        return Err(AuthError(error_less_text).into())
+        return Err(AuthError(error_less_text).into());
     }
     Ok(())
 }

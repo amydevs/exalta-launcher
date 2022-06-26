@@ -4,7 +4,8 @@ use poll_promise::Promise;
 use tokio::process::Command;
 
 use crate::{
-    launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError, ExaltaLauncher, registries,
+    launchargs::LaunchArgs, main_ext::ResultTimeWrapper, registries, update::UpdateError,
+    ExaltaLauncher,
 };
 
 impl ExaltaLauncher {
@@ -23,7 +24,10 @@ impl ExaltaLauncher {
 
             ui.add_space(10.);
             let play_button = egui::Button::new("Play");
-            if ui.add_enabled(self.download_finished_build_hash.is_none(), play_button).clicked() {
+            if ui
+                .add_enabled(self.download_finished_build_hash.is_none(), play_button)
+                .clicked()
+            {
                 if self
                     .runtime
                     .block_on(exalta_core::auth::verify_access_token(

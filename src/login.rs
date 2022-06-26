@@ -1,4 +1,5 @@
 use eframe::egui::{self, Ui};
+use regex::Regex;
 
 use crate::ExaltaLauncher;
 
@@ -39,6 +40,11 @@ impl ExaltaLauncher {
             ui.add_space(10.);
             if ui.button("Login").clicked() {
                 self.login()?;
+            }
+
+            ui.add_space(10.);
+            if ui.button("Reset Password").clicked() {
+                self.reset_password()?;
             }
             Ok(())
         })
@@ -112,5 +118,17 @@ impl ExaltaLauncher {
                     .ok();
             });
         }
+    }
+
+    fn reset_password(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let email_regex = Regex::new(r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})")?;
+        if email_regex.is_match(&self.auth.guid) {
+            self.runtime.block_on(exalta_core::auth::request_forgot_password(&self.auth.guid))?;
+        }
+        else {
+            return Err(Box::new(exalta_core::auth::err::AuthError(format!("{} is not a valid email!", self.auth.guid))));
+        }
+        
+        Ok(())
     }
 }

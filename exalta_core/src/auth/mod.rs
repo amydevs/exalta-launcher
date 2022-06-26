@@ -78,18 +78,19 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
 
 pub async fn request_forgot_password(guid: &str) -> Result<()> {
     let params = [
+        coll_to_owned(vec![("guid", guid)]),
         DEFAULT_PARAMS.read().unwrap().to_vec(),
-        coll_to_owned(vec![("guid", guid)])
     ].concat();
     let resp = CLIENT
-        .post(BASE_URL.join("account/verify")?)
+        .post(BASE_URL.join("account/forgotPassword")?)
         .form(&params)
         .send()
         .await?;
 
     let resp_text = resp.text().await?;
     if !resp_text.to_lowercase().contains("success") {
-        return Err(AuthError(String::from("Could Not Reset Password!")).into())
+        let error_less_text = resp_text.replace("<Error>", "").replace("</Error>", "");
+        return Err(AuthError(error_less_text).into())
     }
     Ok(())
 }

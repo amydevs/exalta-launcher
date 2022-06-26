@@ -1,5 +1,3 @@
-use std::{error::Error, fmt};
-
 use winreg::{enums::*, RegKey};
 
 pub fn get_build_id() -> Result<String, Box<dyn std::error::Error>> {

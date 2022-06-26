@@ -44,4 +44,73 @@ impl ExaltaLauncher {
         })
         .inner
     }
+
+    #[cfg(feature = "steam")]
+    pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some((client, single)) = &self.steam_client {
+            self.auth.guid = format!("steamworks:{}", client.user().steam_id().raw().to_string());
+            let user = client.user();
+
+            let _cb = client.register_callback(|v: ::steamworks::AuthSessionTicketResponse| {
+                println!("Got Response from Steam: {:?}", v.result)
+            });
+
+            let (auth, ticket) = user.authentication_session_ticket();
+
+            for _ in 0..20 {
+                single.run_callbacks();
+                ::std::thread::sleep(::std::time::Duration::from_millis(50));
+            }
+
+            println!("END");
+            let credentials =
+                self.runtime
+                    .block_on(exalta_core::auth::steamworks::request_credentials(
+                        &exalta_core::auth::steamworks::encode_hex(&ticket),
+                    ))?;
+            self.steam_credentials = Some(credentials.clone());
+            self.account = Some(self.runtime.block_on(request_account(
+                &AuthInfo::default().steamworks_credentials(credentials),
+            ))?);
+            self.mutate_router("play");
+
+            user.cancel_authentication_ticket(auth);
+        }
+        self.run_inits();
+        Ok(())
+    }
+    #[cfg(not(feature = "steam"))]
+    pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if !self.config.save_login {
+            self.entry.delete_password().ok();
+        }
+        let acc = self.runtime.block_on(exalta_core::auth::request_account(
+            &exalta_core::auth::AuthInfo::default()
+                .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),
+        ))?;
+
+        self.account = Some(acc);
+        self.mutate_router("play");
+
+        if self.config.save_login {
+            if let Ok(json) = serde_json::to_string(&self.auth) {
+                self.entry.set_password(json.as_str()).ok();
+            }
+        }
+        self.run_inits();
+        Ok(())
+    }
+    fn run_inits(&mut self) {
+        if let Some(account) = &self.account {
+            let access_token = account.access_token.clone();
+            self.runtime.spawn(async move {
+                exalta_core::misc::init(Some("rotmg"), Some(&access_token))
+                    .await
+                    .ok();
+                exalta_core::misc::init(None, Some(&access_token))
+                    .await
+                    .ok();
+            });
+        }
+    }
 }

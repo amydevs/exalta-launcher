@@ -23,3 +23,5 @@ Because the official launcher is a Unity game itself, and therefore has quite hi
 - [X] Downloading / Updating / Verifying Game Files
 - [ ] Login in Case of Security Questions
 - [ ] Signing Up 
+- [ ] Mac / Linux Support
+- [ ] Emulates Traffic Exactly

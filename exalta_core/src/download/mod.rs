@@ -1,4 +1,4 @@
-use std::{fs, io::Write, path::PathBuf, sync::Arc};
+use std::{fs, io::{Write, Read}, path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
 use reqwest::{header::HeaderMap, Method, Response, Url};
@@ -12,6 +12,8 @@ mod checksumfiles;
 mod err;
 
 use anyhow::{Result, bail};
+
+use flate2::read::MultiGzDecoder;
 
 static BUILD_URL: Lazy<Url> =
     Lazy::new(|| Url::parse("https://rotmg-build.decagames.com/").unwrap());
@@ -63,7 +65,6 @@ pub async fn download_file_and_check(
     file: &File,
 ) -> Result<()> {
     for n in 0..2 {
-        println!("Downloading {}", n);
         if download_file(build_hash, platform, dir, &file).await? {
             break;
         }
@@ -94,12 +95,12 @@ pub async fn download_file(
     };
 
     if !file_valid_flag {
-        use futures_util::stream::StreamExt;
 
         let compressed_file_name = format!("{}.gz", &file.file);
-        let mut bstream = request_file(build_hash, platform, &compressed_file_name)
+        let bytes = request_file(build_hash, platform, &compressed_file_name)
             .await?
-            .bytes_stream();
+            .bytes()
+            .await?;
 
         let mut got_file = fs::File::options()
             .read(true)
@@ -108,11 +109,9 @@ pub async fn download_file(
             .open(&file_dir)?;
         got_file.set_len(0)?;
 
-        while let Some(item) = bstream.next().await {
-            let chunk = item?;
-            // MultiGzDecoder::new(&*chunk);
-            got_file.write_all(&chunk)?;
-        }
+        let mut decoder = MultiGzDecoder::new(&bytes[..]);
+
+        std::io::copy(&mut decoder, &mut got_file)?;
     }
 
     Ok(file_valid_flag)
@@ -120,7 +119,6 @@ pub async fn download_file(
 
 pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Result<Response> {
     let url = get_build_url(build_hash, platform, file)?;
-    println!("{}", url);
 
     let mut defheaders = HeaderMap::new();
     defheaders.append("Host", BUILD_URL.host_str().unwrap().parse()?);

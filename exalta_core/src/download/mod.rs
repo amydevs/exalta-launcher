@@ -4,13 +4,14 @@ use once_cell::sync::Lazy;
 use reqwest::{header::HeaderMap, Method, Response, Url};
 use tokio::sync::RwLock;
 
-use crate::CLIENT;
+use crate::{CLIENT, download::err::UpdateError};
 
 use self::checksumfiles::{ChecksumFiles, File};
 
 mod checksumfiles;
+mod err;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 
 static BUILD_URL: Lazy<Url> =
     Lazy::new(|| Url::parse("https://rotmg-build.decagames.com/").unwrap());
@@ -41,13 +42,12 @@ pub async fn download_files_from_checksums(
     for (i, checksum) in checksums_files.iter().enumerate() {
         let max_retries = 2;
         for n in 0..max_retries + 1 {
-            if download_file_and_check(build_hash, platform, dir, &checksum)
-                .await
-                .is_ok()
+            let result = download_file_and_check(build_hash, platform, dir, &checksum).await;
+            if result.is_ok()
             {
                 break;
             } else if n == max_retries {
-                println!("Update Failed");
+                result?;
             }
         }
         if let Some(ref progress) = progress {
@@ -62,9 +62,13 @@ pub async fn download_file_and_check(
     dir: &PathBuf,
     file: &File,
 ) -> Result<()> {
-    for _ in 0..2 {
+    for n in 0..2 {
+        println!("Downloading {}", n);
         if download_file(build_hash, platform, dir, &file).await? {
             break;
+        }
+        else if n == 1 {
+            bail!(UpdateError(format!("Failed to download {}", file.file)));
         }
     }
     Ok(())
@@ -92,9 +96,11 @@ pub async fn download_file(
     if !file_valid_flag {
         use futures_util::stream::StreamExt;
 
-        let mut bstream = request_file(build_hash, platform, &file.file)
+        let compressed_file_name = format!("{}.gz", &file.file);
+        let mut bstream = request_file(build_hash, platform, &compressed_file_name)
             .await?
             .bytes_stream();
+
         let mut got_file = fs::File::options()
             .read(true)
             .write(true)
@@ -104,6 +110,7 @@ pub async fn download_file(
 
         while let Some(item) = bstream.next().await {
             let chunk = item?;
+            // MultiGzDecoder::new(&*chunk);
             got_file.write_all(&chunk)?;
         }
     }
@@ -113,6 +120,7 @@ pub async fn download_file(
 
 pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Result<Response> {
     let url = get_build_url(build_hash, platform, file)?;
+    println!("{}", url);
 
     let mut defheaders = HeaderMap::new();
     defheaders.append("Host", BUILD_URL.host_str().unwrap().parse()?);

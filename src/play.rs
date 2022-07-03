@@ -5,7 +5,7 @@ use tokio::process::Command;
 
 use crate::{
     launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError,
-    ExaltaLauncher,
+    ExaltaLauncher, steam::SteamTrait,
 };
 
 impl ExaltaLauncher {
@@ -126,7 +126,7 @@ impl ExaltaLauncher {
             if let Some(document_dir) = user_dirs.document_dir() {
                 if let Some(account) = &self.account {
                     let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
-                    let args = if let Some(steam_creds) = &self.steam_credentials {
+                    let args = if let Some(steam_creds) = self.steam_wrapper.get_credentials() {
                         serde_json::to_string(&LaunchArgs {
                             platform: "Steam".to_string(),
                             guid: base64::encode(&self.auth.guid),

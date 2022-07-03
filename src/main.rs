@@ -3,6 +3,7 @@ use std::sync::Arc;
 use exalta_core::auth::{account::Account, *};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
 use poll_promise::Promise;
+use steam::SteamTrait;
 use tokio::{runtime::Runtime, sync::RwLock};
 
 mod main_ext;
@@ -13,6 +14,8 @@ mod play;
 mod args;
 mod config;
 mod launchargs;
+
+mod steam;
 
 #[cfg(windows)]
 mod registries;
@@ -42,9 +45,7 @@ struct ExaltaLauncher {
     auth: LauncherAuth,
     account: Option<Account>,
 
-    #[cfg(feature = "steam")]
-    steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
-    steam_credentials: Option<steamworks::Credentials>,
+    steam_wrapper: Option<Box<dyn SteamTrait>>,
 
     entry: keyring::Entry,
     runtime: Runtime,
@@ -135,9 +136,7 @@ impl Default for ExaltaLauncher {
             },
             account: None,
 
-            #[cfg(feature = "steam")]
-            steam_client: ::steamworks::Client::init_app(200210).ok(),
-            steam_credentials: None,
+            steam_wrapper: None,
 
             entry,
             runtime,
@@ -150,20 +149,21 @@ impl Default for ExaltaLauncher {
             download_prog: Arc::new(RwLock::new(0.0)),
         };
 
-        #[cfg(feature = "steam")]
-        if let Some(client) = &self_inst.steam_client {
-            exalta_core::set_steamid_game_net_play_platform(
-                &client.0.user().steam_id().raw().to_string(),
-            );
-            let res = self_inst.login();
-            if self_inst.run_res.result.is_ok() {
-                self_inst.run_res = ResultTimeWrapper::default();
-                self_inst.run_res.result = res;
+        if self_inst.config.steam_flag {
+            self_inst.steam_wrapper = None;
+            if let Some(client) = self_inst.steam_wrapper.get_client() {
+                exalta_core::set_steamid_game_net_play_platform(
+                    &client.0.user().steam_id().raw().to_string(),
+                );
+                let res = self_inst.login();
+                if self_inst.run_res.result.is_ok() {
+                    self_inst.run_res = ResultTimeWrapper::default();
+                    self_inst.run_res.result = res;
+                }
             }
         }
 
-        #[cfg(not(feature = "steam"))]
-        if let Ok(val) = self_inst.entry.get_password() {
+        else if let Ok(val) = self_inst.entry.get_password() {
             if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
                 self_inst.auth = foundauth;
 

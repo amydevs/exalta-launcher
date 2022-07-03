@@ -14,6 +14,7 @@ pub struct AppConfig {
     pub dark: bool,
     pub save_login: bool,
     pub build_hash: String,
+    pub steam_flag: bool
 }
 impl Default for AppConfig {
     fn default() -> Self {
@@ -21,6 +22,7 @@ impl Default for AppConfig {
             dark: false,
             save_login: true,
             build_hash: String::new(),
+            steam_flag: true,
         }
     }
 }

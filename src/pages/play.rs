@@ -59,6 +59,7 @@ impl ExaltaLauncher {
                         self.run_res = ResultTimeWrapper::default();
                         self.run_res.result =
                             Err(Box::new(UpdateError("Download Failed!".to_string())));
+                        self.download_finished_build_hash = None;
                     }
                     Some(Ok(build_hash)) => {
                         let bh = &build_hash.clone();

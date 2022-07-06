@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct LaunchArgs {
     pub platform: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub platform_token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub steam_id: Option<String>,
     pub guid: String,
     pub token: String,

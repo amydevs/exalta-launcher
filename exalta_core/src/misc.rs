@@ -23,7 +23,7 @@ pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<
     Ok(quick_xml::de::from_str::<AppSettings>(resp_text.as_str())?)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct AppSettings {
     pub use_external_payments: String,
@@ -74,7 +74,7 @@ pub struct AppSettings {
     pub launcher_build_cdn: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PotionPurchaseCosts {
     pub cost: Vec<String>,
 }

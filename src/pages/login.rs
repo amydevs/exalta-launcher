@@ -1,6 +1,7 @@
 use eframe::egui::{self, Ui};
 use exalta_core::auth::{err::AuthError, request_account, request_forgot_password, AuthInfo};
 use regex::Regex;
+use super::Route;
 
 use crate::ExaltaLauncher;
 
@@ -80,7 +81,7 @@ impl ExaltaLauncher {
             self.account = Some(self.runtime.block_on(request_account(
                 &AuthInfo::default().steamworks_credentials(credentials),
             ))?);
-            self.mutate_router("play");
+            self.router_path.set(Route::Play);
 
             user.cancel_authentication_ticket(auth);
         }
@@ -89,8 +90,6 @@ impl ExaltaLauncher {
     }
     #[cfg(not(feature = "steam"))]
     pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        use super::Route;
-
         if !self.config.save_login {
             self.entry.delete_password().ok();
         }

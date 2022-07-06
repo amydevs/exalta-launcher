@@ -35,7 +35,7 @@ impl AuthInfo {
     }
 }
 pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
-    let tokenparams = coll_to_owned(vec![("clientToken", CLIENT_TOKEN)]);
+    let tokenparams = coll_to_owned(vec![("clientToken", &crate::CLIENT_TOKEN.read().await)]);
     let post_params: Result<Vec<(String, String)>> =
         if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
             Ok([
@@ -99,7 +99,7 @@ pub async fn request_forgot_password(guid: &str) -> Result<()> {
 pub async fn verify_access_token(access_token: &str) -> Result<bool> {
     // verify
     let tokenparams = coll_to_owned(vec![
-        ("clientToken", crate::CLIENT_TOKEN),
+        ("clientToken", &crate::CLIENT_TOKEN.read().await),
         ("accessToken", access_token),
     ]);
     let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().await.to_vec()].concat();

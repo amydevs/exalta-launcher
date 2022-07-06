@@ -27,12 +27,11 @@ impl ExaltaLauncher {
                 changed = true;
             }
             ui.end_row();
-
-            if changed {
-                self.config.save()?;
-            };
-            Ok(())
-        })
-        .inner
+        });
+        
+        if changed {
+            self.config.save()?;
+        };
+        Ok(())
     }
 }

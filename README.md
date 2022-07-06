@@ -18,9 +18,10 @@ Because the official launcher is a Unity game itself, and therefore has quite hi
 
 ## Features/Todo
 - [X] Login with Username and Password
-- [X] Run Game
 - [X] Login With Steam
+- [X] Run Game
 - [X] Downloading / Updating / Verifying Game Files
+- [X] Setting Game Install Location
 - [ ] Login in Case of Security Questions
 - [ ] Signing Up 
 - [ ] Mac / Linux Support

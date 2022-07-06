@@ -207,7 +207,8 @@ impl eframe::App for ExaltaLauncher {
                         if self.account.is_some() {
                             self.render_play(ui)
                         } else {
-                            todo!()
+                            self.mutate_router_back();
+                            Ok(())
                         }
                     }
                     "config" => self.render_config(ui),

@@ -2,16 +2,14 @@ use std::sync::Arc;
 
 use exalta_core::auth::{account::Account, *};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
+use pages::config;
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
 
 mod main_ext;
 
-mod login;
-mod play;
-
 mod args;
-mod config;
+mod pages;
 mod launchargs;
 
 #[cfg(windows)]

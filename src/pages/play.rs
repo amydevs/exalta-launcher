@@ -86,6 +86,7 @@ impl ExaltaLauncher {
     fn post_download(&mut self, build_hash: &str) {
         self.download_finished_build_hash = None;
         self.config.build_hash = build_hash.to_string();
+        self.config.save().ok();
 
         #[cfg(windows)]
         crate::registries::set_build_id(build_hash).ok();

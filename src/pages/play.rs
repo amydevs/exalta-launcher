@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, path::Path};
 
 use directories::UserDirs;
 use eframe::egui::{self, Ui};
@@ -99,78 +99,70 @@ impl ExaltaLauncher {
         let (sender, promise) = Promise::new();
 
         let prog_clone_1 = self.download_prog.clone();
+        let game_folder_path = Path::new(&self.config.game_folder_path).to_path_buf();
         self.runtime.spawn(async move {
             println!("Download Started!");
-
-            if let Some(user_dirs) = UserDirs::new() {
-                if let Some(document_dir) = user_dirs.document_dir() {
-                    let game_path = document_dir.join("RealmOfTheMadGod/Production/");
-                    let platform = "rotmg-exalt-win-64";
-                    let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
-                    let checksums =
-                        exalta_core::download::request_checksums(&build_hash, platform).await?;
-                    sender.send(
-                        exalta_core::download::download_files_from_checksums(
-                            &build_hash,
-                            platform,
-                            &game_path,
-                            &checksums.files,
-                            Some(prog_clone_1),
-                        )
-                        .await
-                        .map(|_| return build_hash),
-                    );
-                    println!("Download Ended!");
-                }
-            }
+            let game_path = game_folder_path.join("Production/");
+            let platform = "rotmg-exalt-win-64";
+            let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
+            let checksums =
+                exalta_core::download::request_checksums(&build_hash, platform).await?;
+            sender.send(
+                exalta_core::download::download_files_from_checksums(
+                    &build_hash,
+                    platform,
+                    &game_path,
+                    &checksums.files,
+                    Some(prog_clone_1),
+                )
+                .await
+                .map(|_| return build_hash),
+            );
+            println!("Download Ended!");
             Ok::<(), anyhow::Error>(())
         });
 
         self.download_finished_build_hash = Some(promise);
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(user_dirs) = UserDirs::new() {
-            if let Some(document_dir) = user_dirs.document_dir() {
-                if let Some(account) = &self.account {
-                    let execpath = document_dir.join("RealmOfTheMadGod/Production/RotMG Exalt.exe");
-                    let args = if let Some(steam_creds) = &self.steam_credentials {
-                        serde_json::to_string(&LaunchArgs {
-                            platform: "Steam".to_string(),
-                            guid: base64::encode(&self.auth.guid),
-                            platform_token: Some(base64::encode(&steam_creds.platform_token)),
-                            steam_id: Some(base64::encode(
-                                &self.auth.guid.replace("steamworks:", ""),
-                            )),
-                            token: base64::encode(account.access_token.clone()),
-                            token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                            token_expiration: base64::encode(
-                                account.access_token_expiration.clone(),
-                            ),
-                            env: 4,
-                            server_name: String::new(),
-                        })?
-                    } else {
-                        serde_json::to_string(&LaunchArgs {
-                            platform: "Deca".to_string(),
-                            guid: base64::encode(&self.auth.guid),
-                            platform_token: None,
-                            steam_id: None,
-                            token: base64::encode(account.access_token.clone()),
-                            token_timestamp: base64::encode(account.access_token_timestamp.clone()),
-                            token_expiration: base64::encode(
-                                account.access_token_expiration.clone(),
-                            ),
-                            env: 4,
-                            server_name: String::new(),
-                        })?
-                    }
-                    .replace("\"", "");
-                    println!("{}", args);
-                    Command::new(execpath.to_str().unwrap())
-                        .args(&[format!("data:{}", args)])
-                        .spawn()?;
-                }
+        if let Some(account) = &self.account {
+            let execpath =  Path::new(&self.config.game_folder_path).join("Production/RotMG Exalt.exe");
+            let args = if let Some(steam_creds) = &self.steam_credentials {
+                serde_json::to_string(&LaunchArgs {
+                    platform: "Steam".to_string(),
+                    guid: base64::encode(&self.auth.guid),
+                    platform_token: Some(base64::encode(&steam_creds.platform_token)),
+                    steam_id: Some(base64::encode(
+                        &self.auth.guid.replace("steamworks:", ""),
+                    )),
+                    token: base64::encode(account.access_token.clone()),
+                    token_timestamp: base64::encode(account.access_token_timestamp.clone()),
+                    token_expiration: base64::encode(
+                        account.access_token_expiration.clone(),
+                    ),
+                    env: 4,
+                    server_name: String::new(),
+                })?
+            } else {
+                serde_json::to_string(&LaunchArgs {
+                    platform: "Deca".to_string(),
+                    guid: base64::encode(&self.auth.guid),
+                    platform_token: None,
+                    steam_id: None,
+                    token: base64::encode(account.access_token.clone()),
+                    token_timestamp: base64::encode(account.access_token_timestamp.clone()),
+                    token_expiration: base64::encode(
+                        account.access_token_expiration.clone(),
+                    ),
+                    env: 4,
+                    server_name: String::new(),
+                })?
             }
+            .replace("\"", "");
+            println!("{}", args);
+            Command::new(execpath.to_str().unwrap())
+                .args(&[format!("data:{}", args)])
+                .spawn()?;
         }
         Ok(())
     }

@@ -1,16 +1,19 @@
 use std::sync::Arc;
 
-use exalta_core::{auth::{account::Account, *}, download::err::UpdateError};
+use exalta_core::{
+    auth::{account::Account, *},
+    download::err::UpdateError,
+};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
-use pages::{config, Route, HistoryVec};
+use pages::{config, HistoryVec, Route};
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
 
 mod main_ext;
 
 mod args;
-mod pages;
 mod launchargs;
+mod pages;
 
 #[cfg(windows)]
 mod registries;

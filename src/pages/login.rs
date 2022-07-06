@@ -1,7 +1,7 @@
+use super::Route;
 use eframe::egui::{self, Ui};
 use exalta_core::auth::{err::AuthError, request_account, request_forgot_password, AuthInfo};
 use regex::Regex;
-use super::Route;
 
 use crate::ExaltaLauncher;
 

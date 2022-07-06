@@ -15,7 +15,7 @@ pub struct AppConfig {
     pub dark: bool,
     pub save_login: bool,
     pub build_hash: String,
-    pub game_folder_path: String
+    pub game_folder_path: String,
 }
 impl Default for AppConfig {
     fn default() -> Self {
@@ -27,7 +27,7 @@ impl Default for AppConfig {
             dark: false,
             save_login: true,
             build_hash: String::new(),
-            game_folder_path: game_folder_path
+            game_folder_path: game_folder_path,
         }
     }
 }
@@ -69,10 +69,6 @@ impl AppConfig {
     }
 
     pub fn get_default_game_location() -> Option<PathBuf> {
-        Some(
-            UserDirs::new()?
-            .document_dir()?
-            .join("RealmOfTheMadGod/")
-        )
+        Some(UserDirs::new()?.document_dir()?.join("RealmOfTheMadGod/"))
     }
 }

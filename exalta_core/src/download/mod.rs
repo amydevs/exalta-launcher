@@ -4,14 +4,14 @@ use once_cell::sync::Lazy;
 use reqwest::{header::HeaderMap, Method, Response, Url};
 use tokio::sync::RwLock;
 
-use crate::{CLIENT, download::err::UpdateError};
+use crate::{download::err::UpdateError, CLIENT};
 
 use self::checksumfiles::{ChecksumFiles, File};
 
 mod checksumfiles;
 pub mod err;
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 use flate2::read::MultiGzDecoder;
 
@@ -45,8 +45,7 @@ pub async fn download_files_from_checksums(
         let max_retries = 2;
         for n in 0..max_retries + 1 {
             let result = download_file_and_check(build_hash, platform, dir, &checksum).await;
-            if result.is_ok()
-            {
+            if result.is_ok() {
                 break;
             } else if n == max_retries {
                 result?;
@@ -67,8 +66,7 @@ pub async fn download_file_and_check(
     for n in 0..2 {
         if download_file(build_hash, platform, dir, &file).await? {
             break;
-        }
-        else if n == 1 {
+        } else if n == 1 {
             bail!(UpdateError(format!("Failed to download {}", file.file)));
         }
     }
@@ -95,7 +93,6 @@ pub async fn download_file(
     };
 
     if !file_valid_flag {
-
         let compressed_file_name = format!("{}.gz", &file.file);
         let bytes = request_file(build_hash, platform, &compressed_file_name)
             .await?

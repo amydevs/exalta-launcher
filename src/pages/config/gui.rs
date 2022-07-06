@@ -23,12 +23,29 @@ impl ExaltaLauncher {
             ui.end_row();
 
             ui.label("Game Install Path:");
-            if ui.add(egui::TextEdit::singleline(&mut self.config.game_folder_path).hint_text("Write something here")).changed() {
-                changed = true;
-            }
+            ui.horizontal(|ui| {
+                if ui.button("🗀").clicked() {
+                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                        self.config.game_folder_path = path.display().to_string();
+                        changed = true;
+                    }
+                }
+                if ui.button("⟳").clicked() {
+                    if let Some(detected_loc) = super::AppConfig::get_default_game_location() {
+                        self.config.game_folder_path = detected_loc.display().to_string();
+                    }
+                    else {
+                        self.config.game_folder_path = String::new();
+                    }
+                    changed = true;
+                }
+                if ui.add(egui::TextEdit::singleline(&mut self.config.game_folder_path).hint_text("Write something here")).changed() {
+                    changed = true;
+                };
+            });
             ui.end_row();
         });
-        
+
         if changed {
             self.config.save()?;
         };

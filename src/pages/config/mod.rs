@@ -19,10 +19,8 @@ pub struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         let mut game_folder_path = String::new();
-        if let Some(user_dirs) = UserDirs::new() {
-            if let Some(document_dir) = user_dirs.document_dir() {
-                game_folder_path = document_dir.join("RealmOfTheMadGod/").to_string_lossy().to_string();
-            }
+        if let Some(game_loc_detected) = Self::get_default_game_location() {
+            game_folder_path = game_loc_detected.display().to_string();
         }
         Self {
             dark: false,
@@ -67,5 +65,13 @@ impl AppConfig {
     pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
         let config = Self::load_config(&Self::get_location()?)?;
         Ok(config)
+    }
+
+    pub fn get_default_game_location() -> Option<PathBuf> {
+        Some(
+            UserDirs::new()?
+            .document_dir()?
+            .join("RealmOfTheMadGod/")
+        )
     }
 }

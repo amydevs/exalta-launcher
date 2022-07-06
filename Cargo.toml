@@ -23,6 +23,7 @@ base64 = "0.13"
 regex = "1"
 
 directories = "4.0"
+rfd = "0.9"
 clap = { version = "3.2.3", features = ["derive"] }
 
 exalta_core = { path = "exalta_core" }

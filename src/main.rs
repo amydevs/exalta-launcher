@@ -20,10 +20,15 @@ mod registries;
 
 use eframe::egui::{self};
 
+#[cfg(not(feature = "steam"))]
+static APP_NAME: &str = "Exalta Launcher";
+#[cfg(feature = "steam")]
+static APP_NAME: &str = "Exalta Launcher - Steam Edition";
+
 fn main() {
     let options = eframe::NativeOptions::default();
     eframe::run_native(
-        "Exalta Launcher",
+        APP_NAME,
         options,
         Box::new(|_cc| {
             let config = config::AppConfig::load().unwrap_or_default();
@@ -183,7 +188,7 @@ impl eframe::App for ExaltaLauncher {
         ctx.set_pixels_per_point(2.0);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
             use egui::{Button, Rect, RichText, Vec2};
-            ui.heading("Exalta Launcher");
+            ui.heading(APP_NAME);
             let rect = ui.max_rect();
 
             let right_top = rect.right_top() + Vec2 { x: -4.5, y: 1. };

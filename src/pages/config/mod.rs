@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 mod gui;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AppConfig {
     pub dark: bool,
     pub save_login: bool,

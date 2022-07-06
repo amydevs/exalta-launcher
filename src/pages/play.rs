@@ -6,7 +6,7 @@ use poll_promise::Promise;
 use tokio::{process::Command, sync::RwLock};
 
 use crate::{
-    launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError,
+    launchargs::LaunchArgs, main_ext::ResultTimeWrapper,
     ExaltaLauncher,
 };
 
@@ -60,7 +60,7 @@ impl ExaltaLauncher {
                     Some(Err(_)) => {
                         self.run_res = ResultTimeWrapper::default();
                         self.run_res.result =
-                            Err(Box::new(UpdateError("Download Failed!".to_string())));
+                            Err(Box::new(exalta_core::download::err::UpdateError("Download Failed!".to_string())));
                         self.post_download("");
                     }
                     Some(Ok(build_hash)) => {

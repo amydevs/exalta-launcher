@@ -9,7 +9,7 @@ use crate::{CLIENT, download::err::UpdateError};
 use self::checksumfiles::{ChecksumFiles, File};
 
 mod checksumfiles;
-mod err;
+pub mod err;
 
 use anyhow::{Result, bail};
 

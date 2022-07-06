@@ -4,7 +4,7 @@ use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 use anyhow::Result;
 
 pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<AppSettings> {
-    let mut params = DEFAULT_PARAMS.read().unwrap().clone();
+    let mut params = DEFAULT_PARAMS.read().await.clone();
 
     if let Some(game_net) = game_net {
         params[0].0 = game_net.to_owned();

@@ -40,7 +40,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
         if !auth_info.password.is_empty() && !auth_info.username.is_empty() {
             Ok([
                 tokenparams,
-                DEFAULT_PARAMS.read().unwrap().to_vec(),
+                DEFAULT_PARAMS.read().await.to_vec(),
                 coll_to_owned(vec![
                     ("guid", &auth_info.username),
                     ("password", &auth_info.password),
@@ -54,7 +54,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
                     ("secret", &steam_creds.secret),
                 ]),
                 tokenparams,
-                DEFAULT_PARAMS.read().unwrap().to_vec(),
+                DEFAULT_PARAMS.read().await.to_vec(),
             ]
             .concat())
         } else {
@@ -79,7 +79,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
 pub async fn request_forgot_password(guid: &str) -> Result<()> {
     let params = [
         coll_to_owned(vec![("guid", guid)]),
-        DEFAULT_PARAMS.read().unwrap().to_vec(),
+        DEFAULT_PARAMS.read().await.to_vec(),
     ]
     .concat();
     let resp = CLIENT
@@ -102,7 +102,7 @@ pub async fn verify_access_token(access_token: &str) -> Result<bool> {
         ("clientToken", crate::CLIENT_TOKEN),
         ("accessToken", access_token),
     ]);
-    let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().unwrap().to_vec()].concat();
+    let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().await.to_vec()].concat();
     let resp = CLIENT
         .post(BASE_URL.join("account/verifyAccessTokenClient")?)
         .form(&userpassparams)

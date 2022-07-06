@@ -18,7 +18,7 @@ pub fn encode_hex(bytes: &[u8]) -> String {
 pub async fn request_credentials(session_token: &str) -> Result<Credentials> {
     let sessionticketparams = [
         coll_to_owned(vec![("sessionticket", session_token)]),
-        DEFAULT_PARAMS.read().unwrap().to_vec(),
+        DEFAULT_PARAMS.read().await.to_vec(),
     ]
     .concat();
     let steam_creds_resp = CLIENT

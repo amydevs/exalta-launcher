@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::sync::RwLock;
+use tokio::sync::RwLock;
 
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -36,7 +36,7 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
 
 pub fn set_steamid_game_net_play_platform(steamid: &str) {
     let s = "Unity_steam".to_string();
-    let params = &mut DEFAULT_PARAMS.write().unwrap();
+    let params = &mut DEFAULT_PARAMS.blocking_write();
     for (key, val) in params.iter_mut() {
         match key.as_str() {
             "game_net" | "play_platform" => *val = s.clone(),

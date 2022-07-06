@@ -89,6 +89,8 @@ impl ExaltaLauncher {
     }
     #[cfg(not(feature = "steam"))]
     pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        use super::Route;
+
         if !self.config.save_login {
             self.entry.delete_password().ok();
         }
@@ -98,7 +100,7 @@ impl ExaltaLauncher {
         ))?;
 
         self.account = Some(acc);
-        self.mutate_router("play");
+        self.router_path.set(Route::Play);
 
         if self.config.save_login {
             if let Ok(json) = serde_json::to_string(&self.auth) {

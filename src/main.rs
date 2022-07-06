@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use exalta_core::auth::{account::Account, *};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
-use pages::config;
+use pages::{config, Route, HistoryVec};
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
 
@@ -16,7 +16,7 @@ mod launchargs;
 mod registries;
 mod update;
 
-use eframe::egui;
+use eframe::egui::{self, util::History};
 use update::UpdateError;
 
 fn main() {
@@ -49,7 +49,7 @@ struct ExaltaLauncher {
 
     run_res: ResultTimeWrapper,
 
-    router_path: [&'static str; 2],
+    router_path: HistoryVec<Route>,
     config: config::AppConfig,
 
     download_finished_build_hash: Option<Promise<anyhow::Result<String>>>,
@@ -141,7 +141,7 @@ impl Default for ExaltaLauncher {
             runtime,
             run_res,
 
-            router_path: [""; 2],
+            router_path: HistoryVec::new(Route::Login),
             config,
 
             download_finished_build_hash: None,
@@ -191,25 +191,25 @@ impl eframe::App for ExaltaLauncher {
                 Button::new(RichText::new("\u{2699}")).frame(false),
             );
             if settings_resp.clicked() {
-                if *self.router_path.last().unwrap() == "config" {
-                    self.mutate_router_back();
+                if matches!(self.router_path.get(), Route::Config) {
+                    self.router_path.revert();
                 } else {
-                    self.mutate_router("config");
+                    self.router_path.set(Route::Config);
                 }
             }
         });
         if let Err(err) = egui::CentralPanel::default()
             .show(ctx, |ui| -> Result<(), Box<dyn std::error::Error>> {
-                match *self.router_path.last().unwrap() {
-                    "play" => {
+                match self.router_path.get() {
+                    Route::Play => {
                         if self.account.is_some() {
                             self.render_play(ui)
                         } else {
-                            self.mutate_router_back();
+                            self.router_path.revert();
                             Ok(())
                         }
                     }
-                    "config" => self.render_config(ui),
+                    Route::Config => self.render_config(ui),
                     _ => self.render_login(ui),
                 }
             })
@@ -230,14 +230,5 @@ impl eframe::App for ExaltaLauncher {
                 });
             }
         }
-    }
-}
-impl ExaltaLauncher {
-    pub fn mutate_router(&mut self, route: &'static str) {
-        self.router_path.rotate_left(1);
-        *self.router_path.last_mut().unwrap() = route;
-    }
-    pub fn mutate_router_back(&mut self) {
-        self.router_path.rotate_right(1);
     }
 }

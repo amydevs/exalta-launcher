@@ -8,6 +8,8 @@ use crate::{
     ExaltaLauncher,
 };
 
+use super::Route;
+
 impl ExaltaLauncher {
     pub fn render_play(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
         ui.vertical_centered_justified(|ui| {
@@ -73,7 +75,7 @@ impl ExaltaLauncher {
 
             ui.add_space(10.);
             if ui.button("Logout").clicked() {
-                self.mutate_router("");
+                self.router_path.set(Route::Login);
                 self.account = None;
             }
 

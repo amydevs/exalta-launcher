@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use exalta_core::auth::{account::Account, *};
+use exalta_core::{auth::{account::Account, *}, download::err::UpdateError};
 use main_ext::{LauncherAuth, ResultTimeWrapper};
 use pages::{config, Route, HistoryVec};
 use poll_promise::Promise;
@@ -14,10 +14,8 @@ mod launchargs;
 
 #[cfg(windows)]
 mod registries;
-mod update;
 
-use eframe::egui::{self, util::History};
-use update::UpdateError;
+use eframe::egui::{self};
 
 fn main() {
     let options = eframe::NativeOptions::default();

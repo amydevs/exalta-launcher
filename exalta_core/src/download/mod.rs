@@ -1,4 +1,4 @@
-use std::{fs, io::{Write, Read}, path::PathBuf, sync::Arc};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
 use reqwest::{header::HeaderMap, Method, Response, Url};

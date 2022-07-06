@@ -11,7 +11,7 @@ pub mod download;
 pub mod misc;
 
 static BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
-static CLIENT_TOKEN: Lazy<RwLock<&str>> = Lazy::new(|| RwLock::new(""));
+static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
 
 pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
     RwLock::new(vec![
@@ -47,8 +47,8 @@ pub fn set_steamid_game_net_play_platform(steamid: &str) {
     params.push(("steamid".to_owned(), steamid.to_owned()));
 }
 
-pub fn set_client_token(token: &'static str) {
-    *CLIENT_TOKEN.blocking_write() = token;
+pub fn set_client_token(token: &str) {
+    *CLIENT_TOKEN.blocking_write() = token.to_owned();
 }
 
 pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {

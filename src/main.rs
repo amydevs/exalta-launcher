@@ -27,6 +27,9 @@ static APP_NAME: &str = "Exalta Launcher - Steam Edition";
 
 fn main() {
     let options = eframe::NativeOptions::default();
+
+    exalta_core::set_client_token(&get_device_token());
+
     eframe::run_native(
         APP_NAME,
         options,
@@ -40,6 +43,29 @@ fn main() {
             Box::new(ExaltaLauncher::default())
         }),
     );
+}
+fn get_device_token() -> String {
+    use smbioslib::*;
+    use sha1::{Sha1, Digest};
+    let mut concat = String::new();
+
+    if let Ok(data) = table_load_from_device() {
+        if let Some(d) = data.first::<SMBiosBaseboardInformation>() {
+            concat += &d.serial_number().to_string();
+        }
+        if let Some(d) = data.first::<SMBiosSystemInformation>() {
+            concat += &d.serial_number().to_string();
+        }
+    }
+    
+    #[cfg(windows)]
+    if let Some(d) = registries::get_product_id().ok() {
+        concat += &d;
+    }
+    
+    let mut hasher = Sha1::new();
+    hasher.update(concat);
+    format!("{:x}", &hasher.finalize())
 }
 
 struct ExaltaLauncher {

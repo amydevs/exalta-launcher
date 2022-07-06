@@ -1,4 +1,27 @@
+use std::collections::HashMap;
+
 use winreg::{enums::*, RegKey};
+
+pub fn get_product_id() -> Result<String, Box<dyn std::error::Error>> {
+    use wmi::*;
+
+    
+    let com_con = COMLibrary::new()?;
+    let wmi_con = WMIConnection::new(com_con.into())?;
+    let results: Vec<HashMap<String, Variant>> = wmi_con.raw_query("SELECT * FROM Win32_OperatingSystem")?;
+    for os in results {
+        if let Some(var) = os.get("SerialNumber") {
+            if let Variant::String(s) = var {
+                return Ok(s.clone())
+            }
+        }
+    }
+
+    Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "SerialNumber not found",
+    )))
+}
 
 pub fn get_build_id() -> Result<String, Box<dyn std::error::Error>> {
     let hklm = RegKey::predef(HKEY_CURRENT_USER);

@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use directories::UserDirs;
 use eframe::egui::{self, Ui};
 use poll_promise::Promise;
-use tokio::process::Command;
+use tokio::{process::Command, sync::RwLock};
 
 use crate::{
     launchargs::LaunchArgs, main_ext::ResultTimeWrapper, update::UpdateError,
@@ -59,7 +61,7 @@ impl ExaltaLauncher {
                         self.run_res = ResultTimeWrapper::default();
                         self.run_res.result =
                             Err(Box::new(UpdateError("Download Failed!".to_string())));
-                        self.download_finished_build_hash = None;
+                        self.post_download("");
                     }
                     Some(Ok(build_hash)) => {
                         let bh = &build_hash.clone();
@@ -86,6 +88,7 @@ impl ExaltaLauncher {
     }
     fn post_download(&mut self, build_hash: &str) {
         self.download_finished_build_hash = None;
+        self.download_prog = Arc::new(RwLock::new(0.0));
         self.config.build_hash = build_hash.to_string();
         self.config.save().ok();
 

@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use directories::ProjectDirs;
+use directories::{ProjectDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
 mod gui;
@@ -14,13 +14,21 @@ pub struct AppConfig {
     pub dark: bool,
     pub save_login: bool,
     pub build_hash: String,
+    pub game_folder_path: String
 }
 impl Default for AppConfig {
     fn default() -> Self {
+        let mut game_folder_path = String::new();
+        if let Some(user_dirs) = UserDirs::new() {
+            if let Some(document_dir) = user_dirs.document_dir() {
+                game_folder_path = document_dir.join("RealmOfTheMadGod/").to_string_lossy().to_string();
+            }
+        }
         Self {
             dark: false,
             save_login: true,
             build_hash: String::new(),
+            game_folder_path: game_folder_path
         }
     }
 }

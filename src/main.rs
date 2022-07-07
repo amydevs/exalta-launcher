@@ -4,7 +4,7 @@ use exalta_core::{
     auth::{account::Account, *},
     download::err::UpdateError,
 };
-use main_ext::{LauncherAuth, ResultTimeWrapper};
+use main_ext::{LauncherAuth, ResultTimeWrapper, get_device_token};
 use pages::{config, HistoryVec, Route};
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
@@ -43,29 +43,6 @@ fn main() {
             Box::new(ExaltaLauncher::default())
         }),
     );
-}
-fn get_device_token() -> String {
-    use smbioslib::*;
-    use sha1::{Sha1, Digest};
-    let mut concat = String::new();
-
-    if let Ok(data) = table_load_from_device() {
-        if let Some(d) = data.first::<SMBiosBaseboardInformation>() {
-            concat += &d.serial_number().to_string();
-        }
-        if let Some(d) = data.first::<SMBiosSystemInformation>() {
-            concat += &d.serial_number().to_string();
-        }
-    }
-    
-    #[cfg(windows)]
-    if let Some(d) = registries::get_product_id().ok() {
-        concat += &d;
-    }
-    
-    let mut hasher = Sha1::new();
-    hasher.update(concat);
-    format!("{:x}", &hasher.finalize())
 }
 
 struct ExaltaLauncher {

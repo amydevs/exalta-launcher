@@ -1,4 +1,4 @@
-use crate::{coll_to_owned, BASE_URL, CLIENT, CLIENT_TOKEN, DEFAULT_PARAMS};
+use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
 use anyhow::Result;
 
 use self::account::Account;

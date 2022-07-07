@@ -2,7 +2,8 @@ use std::{path::Path, sync::Arc};
 
 use eframe::egui::{self, Ui};
 use poll_promise::Promise;
-use tokio::{process::Command, sync::RwLock};
+use tokio::{sync::RwLock};
+use std::process::Command;
 
 use crate::{launchargs::LaunchArgs, main_ext::ResultTimeWrapper, ExaltaLauncher};
 
@@ -151,9 +152,16 @@ impl ExaltaLauncher {
             }
             .replace("\"", "");
             println!("{}", args);
+
+            #[cfg(target_os="windows")]
             Command::new(execpath.to_str().unwrap())
                 .args(&[format!("data:{}", args)])
                 .spawn()?;
+
+            #[cfg(target_os="linux")]
+            Command::new("sh")
+                .args(&["-c", &format!("wine \"{}\" \"{}\"", execpath.to_str().unwrap(), &format!("data:{}", args))])
+                .spawn().ok();
         }
         Ok(())
     }

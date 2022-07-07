@@ -37,6 +37,7 @@ impl ExaltaLauncher {
                     self.config.save()?;
                 }
 
+                let mut saved_auth_changed = false;
                 egui::ComboBox::from_id_source("saved_combo")
                 .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or("Saved Logins"))
                 .show_ui(ui, |ui| {
@@ -45,15 +46,25 @@ impl ExaltaLauncher {
                             let mut retained = true;
                             if ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid).clicked() {
                                 self.auth = auth.clone();
+                                saved_auth_changed = true;
                             };
                             if ui.button("❌").clicked() {
                                 retained = false;
+                                if i == self.saved_auth.current {
+                                    self.saved_auth.current -= 1;
+                                    saved_auth_changed = true;
+                                }
                             }
                             ui.end_row();
                             retained
                         }));
                     });
                 });
+                if saved_auth_changed {
+                    if let Ok(json) = serde_json::to_string(&self.saved_auth) {
+                        self.entry.set_password(json.as_str())?;
+                    }
+                }
                 Ok(())
             })
             .inner?;

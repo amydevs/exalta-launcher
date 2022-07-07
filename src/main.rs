@@ -51,7 +51,7 @@ struct ExaltaLauncher {
     account: Option<Account>,
 
     #[cfg(feature = "steam")]
-    steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
+    steam_client: Osption<(::steamworks::Client, ::steamworks::SingleClient)>,
     steam_credentials: Option<steamworks::Credentials>,
 
     entry: keyring::Entry,
@@ -193,7 +193,7 @@ impl Default for ExaltaLauncher {
 
 impl eframe::App for ExaltaLauncher {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.set_pixels_per_point(2.0);
+        ctx.set_pixels_per_point(1.8);
         egui::TopBottomPanel::top("top panel").show(ctx, |ui| {
             use egui::{Button, Rect, RichText, Vec2};
             ui.heading(APP_NAME);

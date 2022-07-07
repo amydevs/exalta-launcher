@@ -3,7 +3,7 @@ use eframe::egui::{self, Ui};
 use exalta_core::auth::{err::AuthError, request_account, request_forgot_password, AuthInfo};
 use regex::Regex;
 
-use crate::{ExaltaLauncher, main_ext::LauncherAuth};
+use crate::{ExaltaLauncher, main_ext::{LauncherAuth, with_index}};
 
 impl ExaltaLauncher {
     pub fn render_login(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
@@ -28,6 +28,7 @@ impl ExaltaLauncher {
             })
             .inner?;
             ui.add_space(10.);
+
             ui.horizontal_wrapped(|ui| -> Result<(), Box<dyn std::error::Error>> {
                 if ui
                     .checkbox(&mut self.config.save_login, "Save Login")
@@ -36,15 +37,23 @@ impl ExaltaLauncher {
                     self.config.save()?;
                 }
 
-                
-
-                egui::ComboBox::from_label( "Select one!")
-                .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or(""))
+                if egui::ComboBox::from_id_source( "saved_combo")
+                .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or("Saved Logins"))
                 .show_ui(ui, |ui| {
-                    for (i, auth) in self.saved_auth.saved.iter().enumerate() {
-                        ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid);
-                    }
-                });
+                    egui::Grid::new("saved_grid").num_columns(2).show(ui, |ui| {
+                        self.saved_auth.saved.retain(with_index(|i, auth: &LauncherAuth| {
+                            let mut retained = true;
+                            if ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid).clicked() {
+                                self.auth = auth.clone();
+                            };
+                            if ui.button("❌").clicked() {
+                                retained = false;
+                            }
+                            ui.end_row();
+                            retained
+                        }));
+                    });
+                })
                 Ok(())
             })
             .inner?;
@@ -100,9 +109,6 @@ impl ExaltaLauncher {
     }
     #[cfg(not(feature = "steam"))]
     pub fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if !self.config.save_login {
-            self.entry.delete_password().ok();
-        }
         let acc = self.runtime.block_on(request_account(
             &AuthInfo::default()
                 .username_password(&self.auth.guid.as_str(), &self.auth.password.as_str()),

@@ -51,7 +51,7 @@ struct ExaltaLauncher {
     account: Option<Account>,
 
     #[cfg(feature = "steam")]
-    steam_client: Osption<(::steamworks::Client, ::steamworks::SingleClient)>,
+    steam_client: Option<(::steamworks::Client, ::steamworks::SingleClient)>,
     steam_credentials: Option<steamworks::Credentials>,
 
     entry: keyring::Entry,

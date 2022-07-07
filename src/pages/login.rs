@@ -3,7 +3,7 @@ use eframe::egui::{self, Ui};
 use exalta_core::auth::{err::AuthError, request_account, request_forgot_password, AuthInfo};
 use regex::Regex;
 
-use crate::ExaltaLauncher;
+use crate::{ExaltaLauncher, main_ext::LauncherAuth};
 
 impl ExaltaLauncher {
     pub fn render_login(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
@@ -28,13 +28,23 @@ impl ExaltaLauncher {
             })
             .inner?;
             ui.add_space(10.);
-            ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
+            ui.horizontal_wrapped(|ui| -> Result<(), Box<dyn std::error::Error>> {
                 if ui
                     .checkbox(&mut self.config.save_login, "Save Login")
                     .changed()
                 {
                     self.config.save()?;
                 }
+
+                
+
+                egui::ComboBox::from_label( "Select one!")
+                .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or(""))
+                .show_ui(ui, |ui| {
+                    for (i, auth) in self.saved_auth.saved.iter().enumerate() {
+                        ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid);
+                    }
+                });
                 Ok(())
             })
             .inner?;
@@ -102,7 +112,13 @@ impl ExaltaLauncher {
         self.router_path.set(Route::Play);
 
         if self.config.save_login {
-            if let Ok(json) = serde_json::to_string(&self.auth) {
+            if let Some(existing_auth) = self.saved_auth.saved.iter().position(|e| e.guid == self.auth.guid) {
+                self.saved_auth.saved.remove(existing_auth);
+                
+            }
+            self.saved_auth.saved.push(self.auth.clone());
+            self.saved_auth.current = self.saved_auth.saved.len() - 1;
+            if let Ok(json) = serde_json::to_string(&self.saved_auth) {
                 self.entry.set_password(json.as_str()).ok();
             }
         }

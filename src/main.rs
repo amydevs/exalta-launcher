@@ -4,7 +4,7 @@ use exalta_core::{
     auth::{account::Account, *},
     download::err::UpdateError,
 };
-use main_ext::{LauncherAuth, ResultTimeWrapper, get_device_token};
+use main_ext::{LauncherAuth, ResultTimeWrapper, get_device_token, SavedLauncherAuth};
 use pages::{config, HistoryVec, Route};
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
@@ -47,6 +47,7 @@ fn main() {
 
 struct ExaltaLauncher {
     auth: LauncherAuth,
+    saved_auth: SavedLauncherAuth,
     account: Option<Account>,
 
     #[cfg(feature = "steam")]
@@ -140,6 +141,7 @@ impl Default for ExaltaLauncher {
                 guid: String::new(),
                 password: String::new(),
             },
+            saved_auth: SavedLauncherAuth::default(),
             account: None,
 
             #[cfg(feature = "steam")]
@@ -171,8 +173,11 @@ impl Default for ExaltaLauncher {
 
         #[cfg(not(feature = "steam"))]
         if let Ok(val) = self_inst.entry.get_password() {
-            if let Ok(foundauth) = serde_json::from_str::<LauncherAuth>(&val) {
-                self_inst.auth = foundauth;
+            if let Ok(foundauthvec) = serde_json::from_str::<SavedLauncherAuth>(&val) {
+                self_inst.saved_auth = foundauthvec;
+                if let Some(foundauth) = self_inst.saved_auth.saved.get(self_inst.saved_auth.current) {
+                    self_inst.auth = foundauth.clone();
+                }
 
                 let res = self_inst.login();
                 if self_inst.run_res.result.is_ok() {

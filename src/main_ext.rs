@@ -2,11 +2,33 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+
+pub struct SavedLauncherAuth {
+    pub saved: Vec<LauncherAuth>,
+    pub current: usize,
+}
+impl Default for SavedLauncherAuth {
+    fn default() -> Self {
+        Self {
+            saved: Vec::new(),
+            current: 0,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LauncherAuth {
     pub guid: String,
     pub password: String,
 }
-
+impl Default for LauncherAuth {
+    fn default() -> Self {
+        Self {
+            guid: String::new(),
+            password: String::new()
+        }
+    }
+}
 pub struct ResultTimeWrapper {
     pub result: Result<(), Box<dyn std::error::Error>>,
     pub time: std::time::Instant,

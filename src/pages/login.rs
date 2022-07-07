@@ -37,7 +37,7 @@ impl ExaltaLauncher {
                     self.config.save()?;
                 }
 
-                egui::ComboBox::from_id_source( "saved_combo")
+                egui::ComboBox::from_id_source("saved_combo")
                 .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or("Saved Logins"))
                 .show_ui(ui, |ui| {
                     egui::Grid::new("saved_grid").num_columns(2).show(ui, |ui| {

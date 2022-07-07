@@ -8,75 +8,78 @@ use crate::{ExaltaLauncher, main_ext::{LauncherAuth, with_index}};
 impl ExaltaLauncher {
     pub fn render_login(&mut self, ui: &mut Ui) -> Result<(), Box<dyn std::error::Error>> {
         ui.vertical_centered_justified(|ui| {
-            ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
-                ui.label("Username: ");
-                let re = ui.text_edit_singleline(&mut self.auth.guid);
-                if re.lost_focus() && re.ctx.input().key_pressed(egui::Key::Enter) {
-                    self.login()?;
-                }
-                Ok(())
-            })
-            .inner?;
-            ui.add_space(10.);
-            ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
-                ui.label("Password: ");
-                let re = ui.add(egui::TextEdit::singleline(&mut self.auth.password).password(true));
-                if re.lost_focus() && re.ctx.input().key_pressed(egui::Key::Enter) {
-                    self.login()?;
-                }
-                Ok(())
-            })
-            .inner?;
-            ui.add_space(10.);
-
-            ui.horizontal_wrapped(|ui| -> Result<(), Box<dyn std::error::Error>> {
-                if ui
-                    .checkbox(&mut self.config.save_login, "Save Login")
-                    .changed()
-                {
-                    self.config.save()?;
-                }
-
-                let mut saved_auth_changed = false;
-                egui::ComboBox::from_id_source("saved_combo")
-                .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or("Saved Logins"))
-                .show_ui(ui, |ui| {
-                    egui::Grid::new("saved_grid").num_columns(2).show(ui, |ui| {
-                        self.saved_auth.saved.retain(with_index(|i, auth: &LauncherAuth| {
-                            let mut retained = true;
-                            if ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid).clicked() {
-                                self.auth = auth.clone();
-                                saved_auth_changed = true;
-                            };
-                            if ui.button("❌").clicked() {
-                                retained = false;
-                                if i == self.saved_auth.current {
-                                    self.saved_auth.current -= 1;
-                                    saved_auth_changed = true;
-                                }
-                            }
-                            ui.end_row();
-                            retained
-                        }));
-                    });
-                });
-                if saved_auth_changed {
-                    if let Ok(json) = serde_json::to_string(&self.saved_auth) {
-                        self.entry.set_password(json.as_str())?;
+            #[cfg(not(feature = "steam"))]
+            {
+                ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
+                    ui.label("Username: ");
+                    let re = ui.text_edit_singleline(&mut self.auth.guid);
+                    if re.lost_focus() && re.ctx.input().key_pressed(egui::Key::Enter) {
+                        self.login()?;
                     }
+                    Ok(())
+                })
+                .inner?;
+                ui.add_space(10.);
+                ui.vertical_centered_justified(|ui| -> Result<(), Box<dyn std::error::Error>> {
+                    ui.label("Password: ");
+                    let re = ui.add(egui::TextEdit::singleline(&mut self.auth.password).password(true));
+                    if re.lost_focus() && re.ctx.input().key_pressed(egui::Key::Enter) {
+                        self.login()?;
+                    }
+                    Ok(())
+                })
+                .inner?;
+                ui.add_space(10.);
+
+                ui.horizontal_wrapped(|ui| -> Result<(), Box<dyn std::error::Error>> {
+                    if ui
+                        .checkbox(&mut self.config.save_login, "Save Login")
+                        .changed()
+                    {
+                        self.config.save()?;
+                    }
+
+                    let mut saved_auth_changed = false;
+                    egui::ComboBox::from_id_source("saved_combo")
+                    .selected_text(self.saved_auth.saved.iter().map(|e| e.guid.as_str()).nth(self.saved_auth.current).unwrap_or("Saved Logins"))
+                    .show_ui(ui, |ui| {
+                        egui::Grid::new("saved_grid").num_columns(2).show(ui, |ui| {
+                            self.saved_auth.saved.retain(with_index(|i, auth: &LauncherAuth| {
+                                let mut retained = true;
+                                if ui.selectable_value(&mut self.saved_auth.current, i, &auth.guid).clicked() {
+                                    self.auth = auth.clone();
+                                    saved_auth_changed = true;
+                                };
+                                if ui.button("❌").clicked() {
+                                    retained = false;
+                                    if i == self.saved_auth.current {
+                                        self.saved_auth.current -= 1;
+                                        saved_auth_changed = true;
+                                    }
+                                }
+                                ui.end_row();
+                                retained
+                            }));
+                        });
+                    });
+                    if saved_auth_changed {
+                        if let Ok(json) = serde_json::to_string(&self.saved_auth) {
+                            self.entry.set_password(json.as_str())?;
+                        }
+                    }
+                    Ok(())
+                })
+                .inner?;
+
+                ui.add_space(10.);
+                if ui.button("Reset Password").clicked() {
+                    self.reset_password()?;
                 }
-                Ok(())
-            })
-            .inner?;
+            }
 
             ui.add_space(10.);
             if ui.button("Login").clicked() {
                 self.login()?;
-            }
-
-            ui.add_space(10.);
-            if ui.button("Reset Password").clicked() {
-                self.reset_password()?;
             }
             Ok(())
         })

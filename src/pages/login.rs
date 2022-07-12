@@ -53,7 +53,7 @@ impl ExaltaLauncher {
                                 if ui.button("❌").clicked() {
                                     retained = false;
                                     if i == self.saved_auth.current {
-                                        self.saved_auth.current -= 1;
+                                        if self.saved_auth.current != 0 {self.saved_auth.current -= 1};
                                         saved_auth_changed = true;
                                     }
                                 }

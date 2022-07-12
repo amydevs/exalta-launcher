@@ -88,7 +88,9 @@ impl ExaltaLauncher {
         self.download_finished_build_hash = None;
         self.download_prog = Arc::new(RwLock::new(0.0));
         self.config.build_hash = build_hash.to_string();
-        self.config.save().ok();
+        if let Ok(_) = self.config.save() {
+            println!("Saved build hash: {}", build_hash);
+        }
 
         #[cfg(windows)]
         crate::registries::set_build_id(build_hash).ok();

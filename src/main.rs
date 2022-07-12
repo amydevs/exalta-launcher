@@ -172,21 +172,23 @@ impl Default for ExaltaLauncher {
         }
 
         #[cfg(not(feature = "steam"))]
-        if let Ok(val) = self_inst.entry.get_password() {
-            if let Ok(foundauthvec) = serde_json::from_str::<SavedLauncherAuth>(&val) {
-                self_inst.saved_auth = foundauthvec;
-                if let Some(foundauth) = self_inst.saved_auth.saved.get(self_inst.saved_auth.current) {
-                    self_inst.auth = foundauth.clone();
-                }
-
-                let res = self_inst.login();
-                if self_inst.run_res.result.is_ok() {
-                    self_inst.run_res = ResultTimeWrapper::default();
-                    self_inst.run_res.result = res;
-                }
+        if self_inst.config.save_login {
+            if let Ok(val) = self_inst.entry.get_password() {
+                if let Ok(foundauthvec) = serde_json::from_str::<SavedLauncherAuth>(&val) {
+                    self_inst.saved_auth = foundauthvec;
+                    if let Some(foundauth) = self_inst.saved_auth.saved.get(self_inst.saved_auth.current) {
+                        self_inst.auth = foundauth.clone();
+                    }
+    
+                    let res = self_inst.login();
+                    if self_inst.run_res.result.is_ok() {
+                        self_inst.run_res = ResultTimeWrapper::default();
+                        self_inst.run_res.result = res;
+                    }
+                };
             };
-        };
-
+        }
+        
         self_inst
     }
 }

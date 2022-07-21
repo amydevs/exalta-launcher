@@ -22,7 +22,7 @@ pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
 });
 static CLIENT: Lazy<Client> = Lazy::new(|| {
     let mut defheaders = HeaderMap::new();
-    defheaders.insert("Host", BASE_URL.blocking_read().host_str().unwrap().parse().unwrap());
+    defheaders.insert("Host", BASE_URL.try_read().unwrap().host_str().unwrap().parse().unwrap());
     defheaders.insert("Accept", "*/*".parse().unwrap());
     defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
     defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));

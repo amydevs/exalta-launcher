@@ -10,7 +10,7 @@ pub mod auth;
 pub mod download;
 pub mod misc;
 
-static BASE_URL: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
+static BASE_URL: Lazy<RwLock<Url>> = Lazy::new(|| RwLock::new(Url::parse("https://www.realmofthemadgod.com/").unwrap()));
 static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
 
 pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
@@ -22,7 +22,7 @@ pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
 });
 static CLIENT: Lazy<Client> = Lazy::new(|| {
     let mut defheaders = HeaderMap::new();
-    defheaders.insert("Host", BASE_URL.host_str().unwrap().parse().unwrap());
+    defheaders.insert("Host", BASE_URL.blocking_read().host_str().unwrap().parse().unwrap());
     defheaders.insert("Accept", "*/*".parse().unwrap());
     defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
     defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));

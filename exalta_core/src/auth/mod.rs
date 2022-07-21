@@ -62,7 +62,7 @@ pub async fn request_account(auth_info: &AuthInfo) -> Result<Account> {
         };
 
     let resp = CLIENT
-        .post(BASE_URL.join("account/verify")?)
+        .post(BASE_URL.read().await.join("account/verify")?)
         .form(&post_params?)
         .send()
         .await?;
@@ -83,7 +83,7 @@ pub async fn request_forgot_password(guid: &str) -> Result<()> {
     ]
     .concat();
     let resp = CLIENT
-        .post(BASE_URL.join("account/forgotPassword")?)
+        .post(BASE_URL.read().await.join("account/forgotPassword")?)
         .form(&params)
         .send()
         .await?;
@@ -104,7 +104,7 @@ pub async fn verify_access_token(access_token: &str) -> Result<bool> {
     ]);
     let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().await.to_vec()].concat();
     let resp = CLIENT
-        .post(BASE_URL.join("account/verifyAccessTokenClient")?)
+        .post(BASE_URL.read().await.join("account/verifyAccessTokenClient")?)
         .form(&userpassparams)
         .send()
         .await?;

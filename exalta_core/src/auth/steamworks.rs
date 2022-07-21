@@ -22,7 +22,7 @@ pub async fn request_credentials(session_token: &str) -> Result<Credentials> {
     ]
     .concat();
     let steam_creds_resp = CLIENT
-        .post(BASE_URL.join("steamworks/getcredentials")?)
+        .post(BASE_URL.read().await.join("steamworks/getcredentials")?)
         .form(&sessionticketparams)
         .send()
         .await?;

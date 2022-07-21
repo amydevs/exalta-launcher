@@ -15,7 +15,7 @@ pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<
     }
 
     let resp = CLIENT
-        .post(BASE_URL.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
+        .post(BASE_URL.read().await.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
         .form(&params)
         .send()
         .await?;

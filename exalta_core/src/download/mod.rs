@@ -15,14 +15,14 @@ use anyhow::{bail, Result};
 
 use flate2::read::MultiGzDecoder;
 
-static BUILD_URL: Lazy<Url> =
-    Lazy::new(|| Url::parse("https://rotmg-build.decagames.com/").unwrap());
+static BUILD_URL: Lazy<RwLock<Url>> =
+    Lazy::new(|| RwLock::new(Url::parse("https://rotmg-build.decagames.com/").unwrap()));
 
 pub async fn request_checksums(build_hash: &str, platform: &str) -> Result<ChecksumFiles> {
     let url = get_build_url(build_hash, platform, "checksum.json")?;
 
     let mut defheaders = HeaderMap::new();
-    defheaders.append("Host", BUILD_URL.host_str().unwrap().parse()?);
+    defheaders.append("Host", BUILD_URL.read().await.host_str().unwrap().parse()?);
 
     let resp = CLIENT
         .request(Method::GET, url)
@@ -118,7 +118,7 @@ pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Resul
     let url = get_build_url(build_hash, platform, file)?;
 
     let mut defheaders = HeaderMap::new();
-    defheaders.append("Host", BUILD_URL.host_str().unwrap().parse()?);
+    defheaders.append("Host", BUILD_URL.read().await.host_str().unwrap().parse()?);
 
     let resp = CLIENT
         .request(Method::GET, url)
@@ -129,5 +129,5 @@ pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Resul
 }
 
 fn get_build_url(build_hash: &str, platform: &str, file: &str) -> Result<Url> {
-    Ok(BUILD_URL.join(format!("build-release/{}/{}/{}", build_hash, platform, file).as_str())?)
+    Ok(BUILD_URL.try_read().unwrap().join(format!("build-release/{}/{}/{}", build_hash, platform, file).as_str())?)
 }

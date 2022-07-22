@@ -21,12 +21,8 @@ static BUILD_URL: Lazy<RwLock<Url>> =
 pub async fn request_checksums(build_hash: &str, platform: &str) -> Result<ChecksumFiles> {
     let url = get_base_url(build_hash, platform, "checksum.json").await?;
 
-    let mut defheaders = HeaderMap::new();
-    defheaders.append("Host", BUILD_URL.read().await.host_str().unwrap().parse()?);
-
     let resp = CLIENT
         .request(Method::GET, url)
-        .headers(defheaders)
         .send()
         .await?;
     let resp_text = resp.text().await?;

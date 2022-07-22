@@ -10,10 +10,10 @@ pub mod auth;
 pub mod download;
 pub mod misc;
 
-static BASE_URL_STRING: &str = "https://www.realmofthemadgod.com/";
-static TESTING_BASE_URL_STRING: &str = "https://test.realmofthemadgod.com/";
+static BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
+static TESTING_BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://test.realmofthemadgod.com/").unwrap());
 
-static BASE_URL: Lazy<RwLock<Url>> = Lazy::new(|| RwLock::new(Url::parse(BASE_URL_STRING).unwrap()));
+static BUILD_TYPE: Lazy<RwLock<Build>> = Lazy::new(|| RwLock::new(Build::Production));
 static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
 
 pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
@@ -25,7 +25,7 @@ pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
 });
 static CLIENT: Lazy<Client> = Lazy::new(|| {
     let mut defheaders = HeaderMap::new();
-    defheaders.insert("Host", BASE_URL.try_read().unwrap().host_str().unwrap().parse().unwrap());
+    defheaders.insert("Host", get_base_url_force().host_str().unwrap().parse().unwrap());
     defheaders.insert("Accept", "*/*".parse().unwrap());
     defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
     defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));
@@ -36,6 +36,24 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
         .build()
         .unwrap()
 });
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Build {
+    Production,
+    Testing
+}
+pub async fn get_base_url() -> &'static Url {
+    get_base_url_from_build_type(&*BUILD_TYPE.read().await)
+}
+pub fn get_base_url_force() -> &'static Url {
+    get_base_url_from_build_type(&*BUILD_TYPE.try_read().unwrap())
+}
+fn get_base_url_from_build_type(build_type: &Build) -> &'static Url {
+    return match *build_type {
+        Build::Production => &BASE_URL_STRING,
+        Build::Testing => &TESTING_BASE_URL_STRING
+    };
+}
 
 pub fn set_steamid_game_net_play_platform(steamid: &str) {
     let s = "Unity_steam".to_string();
@@ -58,16 +76,4 @@ pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {
     vec.iter()
         .map(|e| (e.0.to_owned(), e.1.to_owned()))
         .collect()
-}
-
-pub enum Build {
-    Production,
-    Testing
-}
-pub async fn set_build(branch: Build) {
-    let mut url = BASE_URL.write().await;
-    *url = match branch {
-        Build::Production => Url::parse(BASE_URL_STRING).unwrap(),
-        Build::Testing => Url::parse(TESTING_BASE_URL_STRING).unwrap()
-    };
 }

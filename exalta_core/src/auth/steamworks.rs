@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
+use crate::{coll_to_owned, get_base_url, CLIENT, DEFAULT_PARAMS};
 
 use super::err::AuthError;
 
@@ -22,7 +22,7 @@ pub async fn request_credentials(session_token: &str) -> Result<Credentials> {
     ]
     .concat();
     let steam_creds_resp = CLIENT
-        .post(BASE_URL.read().await.join("steamworks/getcredentials")?)
+        .post(get_base_url().await.join("steamworks/getcredentials")?)
         .form(&sessionticketparams)
         .send()
         .await?;

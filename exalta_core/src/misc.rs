@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{coll_to_owned, BASE_URL, CLIENT, DEFAULT_PARAMS};
+use crate::{coll_to_owned, get_base_url, CLIENT, DEFAULT_PARAMS};
 use anyhow::Result;
 
 pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<AppSettings> {
@@ -15,7 +15,7 @@ pub async fn init(game_net: Option<&str>, access_token: Option<&str>) -> Result<
     }
 
     let resp = CLIENT
-        .post(BASE_URL.read().await.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
+        .post(get_base_url().await.join("app/init?platform=standalonewindows64&key=9KnJFxtTvLu2frXv")?)
         .form(&params)
         .send()
         .await?;

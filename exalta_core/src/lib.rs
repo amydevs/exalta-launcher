@@ -55,6 +55,9 @@ fn get_base_url_from_build_type(build_type: &Build) -> &'static Url {
     };
 }
 
+pub async fn set_build(build: Build) {
+    *BUILD_TYPE.write().await = build;
+}
 pub fn set_build_force(build: Build) {
     *BUILD_TYPE.try_write().unwrap() = build;
 }

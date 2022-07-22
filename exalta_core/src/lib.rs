@@ -42,16 +42,16 @@ pub enum Build {
     Production,
     Testing
 }
-pub async fn get_base_url() -> Url {
+pub async fn get_base_url() -> &'static Url {
     get_base_url_from_build_type(&*BUILD_TYPE.read().await)
 }
-pub fn get_base_url_force() -> Url {
+pub fn get_base_url_force() -> &'static Url {
     get_base_url_from_build_type(&*BUILD_TYPE.try_read().unwrap())
 }
-fn get_base_url_from_build_type(build_type: &Build) -> Url {
+fn get_base_url_from_build_type(build_type: &Build) -> &'static Url {
     return match *build_type {
-        Build::Production => BASE_URL_STRING.clone(),
-        Build::Testing => TESTING_BASE_URL_STRING.clone()
+        Build::Production => &BASE_URL_STRING,
+        Build::Testing => &TESTING_BASE_URL_STRING
     };
 }
 

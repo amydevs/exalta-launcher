@@ -33,6 +33,12 @@ mod auth_tests {
         println!("{:?}", exalta_core::DEFAULT_PARAMS.read().await);
     }
 
+    #[tokio::test]
+    async fn test_set_steam() {
+        exalta_core::set_build(exalta_core::Build::Testing).await;
+        println!("{:?}", exalta_core::DEFAULT_PARAMS.read().await);
+    }
+
     #[test]
     fn test_serde() {
         let string = "<Account></Account>";

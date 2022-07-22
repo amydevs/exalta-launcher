@@ -64,8 +64,8 @@ pub enum Build {
     Production,
     Testing
 }
-pub fn set_build(branch: Build) {
-    let mut url = BASE_URL.blocking_write();
+pub async fn set_build(branch: Build) {
+    let mut url = BASE_URL.write().await;
     *url = match branch {
         Build::Production => Url::parse(BASE_URL_STRING).unwrap(),
         Build::Testing => Url::parse(TESTING_BASE_URL_STRING).unwrap()

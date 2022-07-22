@@ -10,7 +10,10 @@ pub mod auth;
 pub mod download;
 pub mod misc;
 
-static BASE_URL: Lazy<RwLock<Url>> = Lazy::new(|| RwLock::new(Url::parse("https://www.realmofthemadgod.com/").unwrap()));
+static BASE_URL_STRING: &str = "https://www.realmofthemadgod.com/";
+static TESTING_BASE_URL_STRING: &str = "https://test.realmofthemadgod.com/";
+
+static BASE_URL: Lazy<RwLock<Url>> = Lazy::new(|| RwLock::new(Url::parse(BASE_URL_STRING).unwrap()));
 static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
 
 pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
@@ -55,4 +58,16 @@ pub fn coll_to_owned(vec: Vec<(&str, &str)>) -> Vec<(String, String)> {
     vec.iter()
         .map(|e| (e.0.to_owned(), e.1.to_owned()))
         .collect()
+}
+
+pub enum Build {
+    Production,
+    Testing
+}
+pub fn set_build(branch: Build) {
+    let mut url = BASE_URL.blocking_write();
+    *url = match branch {
+        Build::Production => Url::parse(BASE_URL_STRING).unwrap(),
+        Build::Testing => Url::parse(TESTING_BASE_URL_STRING).unwrap()
+    };
 }

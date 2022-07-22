@@ -56,7 +56,7 @@ fn get_base_url_from_build_type(build_type: &Build) -> &'static Url {
 }
 
 pub fn set_build_force(build: Build) {
-    *BUILD_TYPE.write().unwrap() = build;
+    *BUILD_TYPE.try_write().unwrap() = build;
 }
 
 pub fn set_steamid_game_net_play_platform(steamid: &str) {

@@ -13,7 +13,7 @@ pub mod misc;
 static BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
 static TESTING_BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://test.realmofthemadgod.com/").unwrap());
 
-static BUILD_TYPE: Lazy<RwLock<Build>> = Lazy::new(|| RwLock::new(Build::Production));
+pub static BUILD_TYPE: Lazy<RwLock<Build>> = Lazy::new(|| RwLock::new(Build::Production));
 static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
 
 pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
@@ -41,6 +41,12 @@ pub enum Build {
     Production,
     Testing
 }
+impl std::fmt::Display for Build {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 pub async fn get_base_url() -> &'static Url {
     get_base_url_from_build_type(&*BUILD_TYPE.read().await)
 }

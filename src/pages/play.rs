@@ -102,7 +102,7 @@ impl ExaltaLauncher {
         let game_folder_path = Path::new(&self.config.game_folder_path).to_path_buf();
         self.runtime.spawn(async move {
             println!("Download Started!");
-            let game_path = game_folder_path.join("Production/");
+            let game_path = game_folder_path.join(format!("{}/", exalta_core::BUILD_TYPE.read().await));
             let platform = "rotmg-exalt-win-64";
             let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
             let checksums = exalta_core::download::request_checksums(&build_hash, platform).await?;
@@ -126,7 +126,7 @@ impl ExaltaLauncher {
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(account) = &self.account {
             let execpath =
-                Path::new(&self.config.game_folder_path).join("Production/RotMG Exalt.exe");
+                Path::new(&self.config.game_folder_path).join(format!("{}/RotMG Exalt.exe", exalta_core::BUILD_TYPE.blocking_read()));
             let args = if let Some(steam_creds) = &self.steam_credentials {
                 serde_json::to_string(&LaunchArgs {
                     platform: "Steam".to_string(),

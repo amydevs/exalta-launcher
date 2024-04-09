@@ -4,7 +4,7 @@ use exalta_core::{
     auth::{account::Account, *},
     download::err::UpdateError,
 };
-use main_ext::{LauncherAuth, ResultTimeWrapper, get_device_token, SavedLauncherAuth};
+use main_ext::{get_device_token, LauncherAuth, ResultTimeWrapper, SavedLauncherAuth};
 use pages::{config, HistoryVec, Route};
 use poll_promise::Promise;
 use tokio::{runtime::Runtime, sync::RwLock};
@@ -40,7 +40,7 @@ fn main() {
             } else {
                 _cc.egui_ctx.set_visuals(egui::Visuals::light());
             }
-            Box::new(ExaltaLauncher::default())
+            Box::<ExaltaLauncher>::default()
         }),
     );
 }
@@ -68,7 +68,7 @@ struct ExaltaLauncher {
 
 impl Default for ExaltaLauncher {
     fn default() -> Self {
-        let entry = keyring::Entry::new(&"exalt", &"jsondata");
+        let entry = keyring::Entry::new("exalt", "jsondata");
 
         let mut run_res = ResultTimeWrapper::default();
 
@@ -109,13 +109,11 @@ impl Default for ExaltaLauncher {
                         config.build_hash = buildhash;
                         config.save()?;
                     }
-                } else {
-                    if &registry_build_hash == &buildhash {
-                        config.build_hash = buildhash;
-                        config.save()?;
-                    } else if &config.build_hash != &buildhash {
-                        return Err(update_error);
-                    }
+                } else if &registry_build_hash == &buildhash {
+                    config.build_hash = buildhash;
+                    config.save()?;
+                } else if &config.build_hash != &buildhash {
+                    return Err(update_error);
                 }
 
                 #[cfg(not(windows))]
@@ -176,10 +174,12 @@ impl Default for ExaltaLauncher {
             if let Ok(foundauthvec) = serde_json::from_str::<SavedLauncherAuth>(&val) {
                 self_inst.saved_auth = foundauthvec;
                 if self_inst.config.save_login {
-                    if let Some(foundauth) = self_inst.saved_auth.saved.get(self_inst.saved_auth.current) {
+                    if let Some(foundauth) =
+                        self_inst.saved_auth.saved.get(self_inst.saved_auth.current)
+                    {
                         self_inst.auth = foundauth.clone();
                     }
-                    
+
                     let res = self_inst.login();
                     if self_inst.run_res.result.is_ok() {
                         self_inst.run_res = ResultTimeWrapper::default();

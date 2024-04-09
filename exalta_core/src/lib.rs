@@ -10,8 +10,10 @@ pub mod auth;
 pub mod download;
 pub mod misc;
 
-static BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
-static TESTING_BASE_URL_STRING: Lazy<Url> = Lazy::new(|| Url::parse("https://test.realmofthemadgod.com/").unwrap());
+static BASE_URL_STRING: Lazy<Url> =
+    Lazy::new(|| Url::parse("https://www.realmofthemadgod.com/").unwrap());
+static TESTING_BASE_URL_STRING: Lazy<Url> =
+    Lazy::new(|| Url::parse("https://test.realmofthemadgod.com/").unwrap());
 
 pub static BUILD_TYPE: Lazy<RwLock<Build>> = Lazy::new(|| RwLock::new(Build::Production));
 static CLIENT_TOKEN: Lazy<RwLock<String>> = Lazy::new(|| RwLock::new(String::new()));
@@ -26,7 +28,6 @@ pub static DEFAULT_PARAMS: Lazy<RwLock<Vec<(String, String)>>> = Lazy::new(|| {
 static CLIENT: Lazy<Client> = Lazy::new(|| {
     let mut defheaders = HeaderMap::new();
     defheaders.insert("Accept", "*/*".parse().unwrap());
-    defheaders.insert("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
     defheaders.insert("X-Unity-Version", HeaderValue::from_static("2020.3.30f1"));
     Client::builder()
         .http1_title_case_headers()
@@ -39,7 +40,7 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Build {
     Production,
-    Testing
+    Testing,
 }
 impl std::fmt::Display for Build {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -56,7 +57,7 @@ pub fn get_base_url_force() -> &'static Url {
 fn get_base_url_from_build_type(build_type: &Build) -> &'static Url {
     return match *build_type {
         Build::Production => &BASE_URL_STRING,
-        Build::Testing => &TESTING_BASE_URL_STRING
+        Build::Testing => &TESTING_BASE_URL_STRING,
     };
 }
 

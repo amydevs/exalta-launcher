@@ -27,7 +27,7 @@ impl Default for AppConfig {
             dark: false,
             save_login: true,
             build_hash: String::new(),
-            game_folder_path: game_folder_path,
+            game_folder_path,
         }
     }
 }
@@ -36,7 +36,7 @@ impl AppConfig {
     fn get_location() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let location = match ProjectDirs::from("com", "AyanAmy", "Exalta") {
             Some(v) => {
-                std::fs::create_dir_all(&v.config_dir())?;
+                std::fs::create_dir_all(v.config_dir())?;
                 v.config_dir().to_path_buf()
             }
             None => std::env::current_dir()?,

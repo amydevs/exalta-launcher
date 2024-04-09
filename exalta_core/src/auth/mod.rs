@@ -104,7 +104,11 @@ pub async fn verify_access_token(access_token: &str) -> Result<bool> {
     ]);
     let userpassparams = [tokenparams, crate::DEFAULT_PARAMS.read().await.to_vec()].concat();
     let resp = CLIENT
-        .post(get_base_url().await.join("account/verifyAccessTokenClient")?)
+        .post(
+            get_base_url()
+                .await
+                .join("account/verifyAccessTokenClient")?,
+        )
         .form(&userpassparams)
         .send()
         .await?;

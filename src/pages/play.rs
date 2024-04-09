@@ -2,8 +2,8 @@ use std::{path::Path, sync::Arc};
 
 use eframe::egui::{self, Ui};
 use poll_promise::Promise;
-use tokio::{sync::RwLock};
 use std::process::Command;
+use tokio::sync::RwLock;
 
 use crate::{launchargs::LaunchArgs, main_ext::ResultTimeWrapper, ExaltaLauncher};
 
@@ -88,7 +88,7 @@ impl ExaltaLauncher {
         self.download_finished_build_hash = None;
         self.download_prog = Arc::new(RwLock::new(0.0));
         self.config.build_hash = build_hash.to_string();
-        if let Ok(_) = self.config.save() {
+        if self.config.save().is_ok() {
             println!("Saved build hash: {}", build_hash);
         }
 
@@ -102,7 +102,8 @@ impl ExaltaLauncher {
         let game_folder_path = Path::new(&self.config.game_folder_path).to_path_buf();
         self.runtime.spawn(async move {
             println!("Download Started!");
-            let game_path = game_folder_path.join(format!("{}/", exalta_core::BUILD_TYPE.read().await));
+            let game_path =
+                game_folder_path.join(format!("{}/", exalta_core::BUILD_TYPE.read().await));
             let platform = "rotmg-exalt-win-64";
             let build_hash = exalta_core::misc::init(None, None).await?.build_hash;
             let checksums = exalta_core::download::request_checksums(&build_hash, platform).await?;
@@ -115,7 +116,7 @@ impl ExaltaLauncher {
                     Some(prog_clone_1),
                 )
                 .await
-                .map(|_| return build_hash),
+                .map(|_| build_hash),
             );
             println!("Download Ended!");
             Ok::<(), anyhow::Error>(())
@@ -125,14 +126,16 @@ impl ExaltaLauncher {
     }
     fn load(&self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(account) = &self.account {
-            let execpath =
-                Path::new(&self.config.game_folder_path).join(format!("{}/RotMG Exalt.exe", exalta_core::BUILD_TYPE.blocking_read()));
+            let execpath = Path::new(&self.config.game_folder_path).join(format!(
+                "{}/RotMG Exalt.exe",
+                exalta_core::BUILD_TYPE.blocking_read()
+            ));
             let args = if let Some(steam_creds) = &self.steam_credentials {
                 serde_json::to_string(&LaunchArgs {
                     platform: "Steam".to_string(),
                     guid: base64::encode(&self.auth.guid),
                     platform_token: Some(base64::encode(&steam_creds.platform_token)),
-                    steam_id: Some(base64::encode(&self.auth.guid.replace("steamworks:", ""))),
+                    steam_id: Some(base64::encode(self.auth.guid.replace("steamworks:", ""))),
                     token: base64::encode(account.access_token.clone()),
                     token_timestamp: base64::encode(account.access_token_timestamp.clone()),
                     token_expiration: base64::encode(account.access_token_expiration.clone()),
@@ -152,18 +155,26 @@ impl ExaltaLauncher {
                     server_name: String::new(),
                 })?
             }
-            .replace("\"", "");
+            .replace('"', "");
             println!("{}", args);
 
-            #[cfg(target_os="windows")]
+            #[cfg(target_os = "windows")]
             Command::new(execpath.to_str().unwrap())
                 .args(&[format!("data:{}", args)])
                 .spawn()?;
 
-            #[cfg(target_os="linux")]
+            #[cfg(target_os = "linux")]
             Command::new("sh")
-                .args(&["-c", &format!("wine \"{}\" \"{}\"", execpath.to_str().unwrap(), &format!("data:{}", args))])
-                .spawn().ok();
+                .args(&[
+                    "-c",
+                    &format!(
+                        "wine \"{}\" \"{}\"",
+                        execpath.to_str().unwrap(),
+                        &format!("data:{}", args)
+                    ),
+                ])
+                .spawn()
+                .ok();
         }
         Ok(())
     }

@@ -1,7 +1,10 @@
 use std::{fs, path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
-use reqwest::{header::HeaderMap, Method, Response, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Method, Response, Url,
+};
 use tokio::sync::RwLock;
 
 use crate::{download::err::UpdateError, CLIENT};
@@ -21,10 +24,7 @@ static BUILD_URL: Lazy<RwLock<Url>> =
 pub async fn request_checksums(build_hash: &str, platform: &str) -> Result<ChecksumFiles> {
     let url = get_base_url(build_hash, platform, "checksum.json").await?;
 
-    let resp = CLIENT
-        .request(Method::GET, url)
-        .send()
-        .await?;
+    let resp = CLIENT.request(Method::GET, url).send().await?;
     let resp_text = resp.text().await?;
 
     Ok(serde_json::from_str::<ChecksumFiles>(&resp_text)?)
@@ -115,6 +115,7 @@ pub async fn request_file(build_hash: &str, platform: &str, file: &str) -> Resul
 
     let mut defheaders = HeaderMap::new();
     defheaders.append("Host", BUILD_URL.read().await.host_str().unwrap().parse()?);
+    defheaders.append("Accept-Encoding", HeaderValue::from_static("gzip, deflate"));
 
     let resp = CLIENT
         .request(Method::GET, url)
@@ -129,6 +130,8 @@ async fn get_base_url(build_hash: &str, platform: &str, file: &str) -> Result<Ur
         crate::Build::Production => "build-release",
         crate::Build::Testing => "build",
     };
-    Ok(BUILD_URL.try_read().unwrap().join(format!("{}/{}/{}/{}", build_branch, build_hash, platform, file).as_str())?)
+    Ok(BUILD_URL
+        .try_read()
+        .unwrap()
+        .join(format!("{}/{}/{}/{}", build_branch, build_hash, platform, file).as_str())?)
 }
-

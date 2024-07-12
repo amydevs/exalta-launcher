@@ -14,6 +14,11 @@ mkShell {
     pkg-config
     openssl
     gtk3
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXrandr
+    xorg.libXi
+    libGL
   ];
   # Don't set rpath for native addons
   NIX_DONT_SET_RPATH = true;
@@ -22,6 +27,9 @@ mkShell {
   PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
   LD_LIBRARY_PATH = lib.makeLibraryPath [
     openssl
+    gtk3
+    glib
+    libGL
   ];
   shellHook = ''
 
